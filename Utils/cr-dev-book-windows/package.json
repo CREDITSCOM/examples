@@ -1,0 +1,31 @@
+{
+  "name": "cr-dev-book",
+  "version": "1.0.0",
+  "description": "CREDITS Dev Book",
+  "main": "index.js",
+  "homepage": "credits.com",
+  "author": "pvl1175 <vitaly.popov.75@gmail.com>",
+  "license": "ISC",
+  "build": {
+    "appId": "com.credits.dev-book",
+    "productName": "CREDITS Dev Book",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "runAfterFinish": true
+    }
+  },
+  "scripts": {
+    "pack": "build --dir",
+    "dist": "build",
+    "postinstall": "install-app-deps",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^1.8.8",
+    "electron-builder": "^20.38.3"
+  }
+}

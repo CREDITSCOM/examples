@@ -1,0 +1,35 @@
+{
+  "name": "cr-web-wallet",
+  "version": "1.0.0",
+  "description": "CREDITS Web Wallet",
+  "main": "index.js",
+  "homepage": "credits.com",
+  "author": "pvl1175 <vitaly.popov.75@gmail.com>",
+  "license": "ISC",
+  "build": {
+    "appId": "com.credits.web-wallet",
+    "productName": "CREDITS Web Wallet",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "runAfterFinish": true
+    }
+  },
+  "scripts": {
+    "pack": "build --dir",
+    "dist": "build",
+    "postinstall": "install-app-deps",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^1.8.8",
+    "electron-builder": "18.0.1"
+  },
+  "dependencies": {
+    "dist": "^0.1.2",
+    "run": "^1.4.0"
+  }
+}

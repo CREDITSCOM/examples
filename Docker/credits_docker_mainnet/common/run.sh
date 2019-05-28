@@ -1,0 +1,1 @@
+./runner "--db-path main_db/ --public-key-file main_keys/public.txt --private-key-file main_keys/private.txt"

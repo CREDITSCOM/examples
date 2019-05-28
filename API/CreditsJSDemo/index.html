@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <script src="thrift.js"></script>
+    <script src="api/API.js"></script>
+    <script src="general/general_types.js"></script>
+    <script src="api/api_types.js"></script>
+    <script src="base58.js"></script>
+
+    <title>CREDITS API JS Demo</title>
+    <script>
+        function run()
+        {
+            var url = "http://your node's ip:port"; // for example http://127.0.0.1:8081
+            var transport = new Thrift.Transport(url);
+            var protocol = new Thrift.Protocol(transport);
+            var client = new APIClient(protocol);
+
+            var PublicKeyFrom = "your public key";
+            var BytePublicKeyFrom = from_b58(PublicKeyFrom);
+
+            var obj = client.WalletBalanceGet(BytePublicKeyFrom);
+
+            console.log(obj);
+
+            document.getElementById('pc-id').innerText = PublicKeyFrom;
+            document.getElementById('bl-id').innerText = 'Integral: ' + obj.balance.integral + ', Fraction: ' + obj.balance.fraction;
+        }
+        function ready() {
+            run();
+        }
+        document.addEventListener("DOMContentLoaded", ready);
+    </script>
+</head>
+<body>
+    <h1 >Public Key</h1>
+    <dl></dl>
+    <h2 id="pc-id">Empty</h2>
+    
+    <h1>Balance</h1>
+    <dl></dl>
+    <h2 id="bl-id">0</h2>
+</body>
+</html>

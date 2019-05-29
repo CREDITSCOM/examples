@@ -31,7 +31,7 @@ sudo docker run -it -p 6000:6000 -p 9090:9090 --mount source=test_db,target=/cre
 ./client --db-path test_db/ --public-key-file test_keys/public.txt --private-key-file test_keys/private.txt
 
 
-##How to run
+## How to run
 ### You can run run.sh or run step by step commands below:
 ### run bash
 sudo docker run -it -p 6000:6000 -p 9090:9090 --mount source=test_db,target=/credits/test_db --mount source=test_keys,target=/credits/test_keys credits_testnet:latest bash

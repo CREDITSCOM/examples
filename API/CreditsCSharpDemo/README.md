@@ -7,11 +7,11 @@ Allows to create a transaction (transfer coins from the current wallet to the sp
 
 ## Using:
 ### Build for Windows
-build64.cmd<br>
+build-windows.cmd<br>
 ### Run
 run.cmd <br>
 
 ### Build for Linux:
-build64.sh<br>
+build-linux.sh<br>
 ### Run
 runme.sh<br>

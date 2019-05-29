@@ -1,4 +1,6 @@
 ## CreditsCPlusPlusDemoCMake
+https://developers.credits.com/en/Articles/a_Using_Credits_API_in_C_(demo)_Cmake_Cross_platform
+
 
 A simple console C++ (CMake) application<br>
 Using the public key of the wallet displays the balance.

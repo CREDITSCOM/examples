@@ -4,7 +4,7 @@ https://developers.credits.com/en/Articles/a_Using_Credits_blockchain_software_i
 
 ## How to build
 ### You can run build.sh or run step by step commands below:
-```shell
+```shell 
 wget https://credits.com/Content/file_users/Credits_Node_linux_x64_ver_4.2.412.3_test.tar.gz -P build Credits_Node_linux_x64_ver_4.2.412.3_test.tar.gz
 tar -xvzf build/Credits_Node_linux_x64_ver_4.2.412.3_test.tar.gz --strip-components 1 -C build
 rm build/Credits_Node_linux_x64_ver_4.2.412.3_test.tar.gz

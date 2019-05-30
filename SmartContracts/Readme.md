@@ -1,1 +1,1 @@
-# Empty a while
+# CS smart-contracts (examples)

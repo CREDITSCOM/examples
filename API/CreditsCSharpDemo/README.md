@@ -17,7 +17,6 @@ The Apache Thrift software framework is designed for development of scalable cro
 https://thrift.apache.org/
 
 ## Creation and execution of transactions with Credits API support (in C#)
-https://github.com/CREDITSCOM/Examples
 https://developers.credits.com/en/Articles/a_Creating_and_execution_of_transaction_C_
 
 ## Using:

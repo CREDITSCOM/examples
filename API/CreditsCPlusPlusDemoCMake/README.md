@@ -19,11 +19,19 @@ https://thrift.apache.org/
 
 ## Using:
 ### Build for Windows
+```shell
 build64.cmd
+```
 ### Run
+```shell
 run.cmd
+```
 
 ### Build for Linux:
-build64.sh
+```shell
+./build64.sh
+```
 ### Run
-runme.sh
+```shell
+./runme.sh
+```

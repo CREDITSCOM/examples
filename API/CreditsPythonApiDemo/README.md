@@ -16,11 +16,19 @@ https://thrift.apache.org/
 
 ## Using:
 ### Build for Windows
+```shell
 build-windows.cmd
+```
 ### Run
-run.cmd <br>
+```shell
+run.cmd
+```
 
 ### Build for Linux:
-build-linux.sh
+```shell
+./build-linux.sh
+```
 ### Run
-runme.sh
+```shell
+./runme.sh
+```

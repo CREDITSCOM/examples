@@ -12,11 +12,15 @@ Python is a programming language that lets you work quickly and integrate system
 
 ## Using:
 ### Build for Windows
+```shell
 build.cmd
+```
 ### Run
 Opem the index.html int the favorite browser
 
 ### Build for Linux:
-build.sh
+```shell
+./build.sh
+```
 ### Run
 Opem the index.html int the favorite browser

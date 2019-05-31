@@ -23,4 +23,4 @@ Opem the index.html int the favorite browser
 ./build.sh
 ```
 ### Run
-Opem the index.html int the favorite browser
+Open the index.html in the your favorite browser

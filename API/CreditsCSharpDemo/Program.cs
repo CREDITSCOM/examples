@@ -133,6 +133,7 @@ namespace CreditsCSAPIDemo
                         Console.WriteLine($"[{SourceKeys.PublicKey}] Balance: {balance.Balance.ToString()}");
 
                         var clientEx = new ClientEx(client, SourceKeys, TargetKeys);
+                        Console.WriteLine("Result of the transaction execution:");
                         Console.WriteLine(clientEx.ExecuteTransaction());
                     }
                 }

@@ -33,7 +33,7 @@ class CreditsUtils {
 
     executeTransactin(amountVal, feeValue) {
         var tran = this.createTransaction(amountVal, feeValue);
-        if(tren === null)
+        if(tran === null)
             return null;
             
         var tranFlow = this.client().TransactionFlow(tran);

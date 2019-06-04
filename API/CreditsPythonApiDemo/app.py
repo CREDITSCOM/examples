@@ -1,29 +1,26 @@
-from thrift.protocol.TBinaryProtocol import TBinaryProtocol
-from thrift.transport.TSocket import TSocket
-import base58
-
-from api.API import Client
+import sys
+from keys import Keys
+from clientex import ClientEx
 
 
 def main():
-   publicKey = '5B3YXqDTcWQFGAqEJQJP3Bg1ZK8FFtHtgCiFLT5VAxpe'
-   publicKeyBytes = base58.b58decode(publicKey)
+    if len(sys.argv) != 5:
+        print('Welcome to the Credits API Python Demo')
+        print('Usage: app.py NodeIpAddress:Port YourPublicKey YourPrivateKey TargetPublicKey')
+        print('')
+        return
 
-   try:
-      tr = TSocket('169.38.89.217', 9090)
-      protocol = TBinaryProtocol(tr)
-      client = Client(protocol)
-      tr.open()
+    keys = Keys(sys.argv[2], sys.argv[3], sys.argv[4])
 
-      balance = client.WalletBalanceGet(publicKeyBytes)
-      print(balance)
+    try:
+        client = ClientEx(sys.argv[1].split(':'))
+        print(client.wallet_balance_get(keys.public_key_bytes))
+        client.execute_transaction(keys)
+        client.close()
 
-      transactionGetResult = client.WalletTransactionsCountGet(publicKeyBytes)
-      print(transactionGetResult)
-
-   except:
-      print("Oops. Unexpected error.")
+    except:
+        print("Oops. Unexpected error.")
 
 
 if __name__ == '__main__':
-   main()
+    main()

@@ -6,4 +6,5 @@ chmod +x env/bin/activate
 env/bin/activate
 pip3 install thrift
 pip3 install base58
+pip3 install ed25519
 env/bin/deactivate

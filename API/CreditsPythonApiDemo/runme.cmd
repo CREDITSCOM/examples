@@ -1,3 +1,5 @@
 call env\Scripts\activate.bat
-python app.py
+python app.py 169.38.89.217:9090 9onQndywomSUr6iYKA2MS5pERcTJwEuUJys1iKNu13cH 4xVSMfNdGTdn32QHRoxx7GVUdRCUnqvpF5jDTxkvNzwpDNpiW27taPrQ9QjDacuH9GpU8SJA8XSR9Pb8o2H4GXp1 H5ptdUUfjJBGiK2X3gN2EzNYxituCUUnXv2tiMdQKP3b
 call env\Scripts\deactivate.bat
+
+pause

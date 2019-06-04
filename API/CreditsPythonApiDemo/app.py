@@ -4,23 +4,26 @@ import base58
 
 from api.API import Client
 
-publicKey = '5B3YXqDTcWQFGAqEJQJP3Bg1ZK8FFtHtgCiFLT5VAxpe'
 
-publicKeyBytes = base58.b58decode(publicKey)
+def main():
+   publicKey = '5B3YXqDTcWQFGAqEJQJP3Bg1ZK8FFtHtgCiFLT5VAxpe'
+   publicKeyBytes = base58.b58decode(publicKey)
 
-try:
+   try:
+      tr = TSocket('169.38.89.217', 9090)
+      protocol = TBinaryProtocol(tr)
+      client = Client(protocol)
+      tr.open()
 
-   tr = TSocket('169.38.89.217', 9090)
-   protocol = TBinaryProtocol(tr)
-   client = Client(protocol)
-   tr.open()
+      balance = client.WalletBalanceGet(publicKeyBytes)
+      print(balance)
 
-   balance = client.WalletBalanceGet(publicKeyBytes)
-   print(balance)
+      transactionGetResult = client.WalletTransactionsCountGet(publicKeyBytes)
+      print(transactionGetResult)
 
-   transactionGetResult = client.WalletTransactionsCountGet(publicKeyBytes)
-   print(transactionGetResult)
+   except:
+      print("Oops. Unexpected error.")
 
-except:
 
-   print("Oops. Unexpected error.")
+if __name__ == '__main__':
+   main()

@@ -83,6 +83,22 @@ fee(v) {
 ```shell
 build.cmd
 ```
+
+### The content of build.cmd
+```shell
+rmdir /S /Q build64
+rmdir /S /Q CS-API
+rmdir /S /Q thrift
+rmdir /S /Q api
+rmdir /S /Q general
+
+git clone https://github.com/CREDITSCOM/thrift-interface-definitions
+mkdir api
+mkdir general
+thrift.exe -gen js -out .\api .\thrift-interface-definitions\api.thrift
+thrift.exe -gen js -out .\general .\thrift-interface-definitions\general.thrift
+```
+
 ### Run
 Opem the index.html int the favorite browser
 
@@ -90,5 +106,19 @@ Opem the index.html int the favorite browser
 ```shell
 ./build.sh
 ```
+
+### The content of build.sh
+```shell
+rm -r -f CS-API
+rm -r -f api
+rm -r -f general
+
+git clone https://github.com/CREDITSCOM/thrift-interface-definitions
+mkdir api
+mkdir general
+thrift -gen js -out .\api .\thrift-interface-definitions\api.thrift
+thrift -gen js -out .\general .\thrift-interface-definitions\general.thrift
+```
+
 ### Run
 Open the index.html in the your favorite browser

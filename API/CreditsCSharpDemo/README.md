@@ -91,17 +91,48 @@ private short Fee(Double value)
 ```shell
 build-windows.cmd
 ```
+
+### The content of build-windows.cmd
+```shell
+git clone https://github.com/CREDITSCOM/thrift-interface-definitions
+thrift -gen csharp -out . .\thrift-interface-definitions\general.thrift
+thrift -gen csharp -out . .\thrift-interface-definitions\api.thrift
+dotnet add package apache-thrift-netcore --version 0.9.3.2
+dotnet add package SimpleBase --version 1.8.0
+pause
+```
+
 ### Run
 ```shell
 run.cmd
+```
+
+### The content of run.cmd
+```shell
+dotnet run
+pause
 ```
 
 ### Build for Linux:
 ```shell
 ./build-linux.sh
 ```
+
+### The content of build-linux.sh
+```shell
+git clone https://github.com/CREDITSCOM/thrift-interface-definitions
+thrift -gen csharp -out . ./thrift-interface-definitions/general.thrift
+thrift -gen csharp -out . ./thrift-interface-definitions/api.thrift
+dotnet add package apache-thrift-netcore --version 0.9.3.2
+dotnet add package SimpleBase --version 1.8.0
+```
+
 ### Run
 ```shell
 ./runme.sh
 ```
 
+### The content of runme.sh
+```shell
+dotnet run
+```

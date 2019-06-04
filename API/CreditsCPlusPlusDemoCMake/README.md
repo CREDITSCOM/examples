@@ -22,16 +22,77 @@ https://thrift.apache.org/
 ```shell
 build64.cmd
 ```
+
+### The content of build64.cmd
+```shell
+rmdir /S /Q build64
+rmdir /S /Q CS-API
+rmdir /S /Q thrift
+rmdir /S /Q api
+
+git clone https://github.com/CREDITSCOM/thrift-interface-definitions
+mkdir api
+thrift -r -gen cpp:no_skeleton,pure_enums,moveable_types -out .\api .\thrift-interface-definitions\api.thrift
+
+git clone https://github.com/CREDITSCOM/thrift
+cd thrift
+
+cd ..
+mkdir build64
+cd build64
+
+cmake .. -A x64 
+cmake  --build . --config Debug
+cmake  --build . --config Release
+
+pause
+```
+
 ### Run
 ```shell
 run.cmd
+```
+
+### The content of run.cmd
+```shell
+.\build64\release\main.exe
+pause
 ```
 
 ### Build for Linux:
 ```shell
 ./build64.sh
 ```
+
+### The content of build64.sh
+```shell
+rm -r -f build64
+rm -r -f CS-API
+rm -r -f thrift
+rm -r -f api
+
+git clone https://github.com/CREDITSCOM/thrift-interface-definitions
+mkdir api
+thrift -r -gen cpp:no_skeleton,pure_enums,moveable_types -out ./api ./thrift-interface-definitions/api.thrift
+
+git clone https://github.com/CREDITSCOM/thrift
+cd thrift
+
+cd ..
+mkdir build64
+cd build64
+
+cmake ..
+cmake  --build . --config Debug
+cmake  --build . --config Release
+```
+
 ### Run
 ```shell
 ./runme.sh
+```
+
+### The content of run.sh
+```shell
+./build64/main
 ```

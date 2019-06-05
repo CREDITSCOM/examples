@@ -11,25 +11,46 @@
 #include <thrift/transport/TBufferTransports.h>
 #include <thrift/protocol/TBinaryProtocol.h>
 
-#include "common/base58.h"
 #include "api/API.h"
+#include "keys.h"
 
 using namespace apache::thrift::transport;
 using namespace apache::thrift::protocol;
 using namespace api;
 
-class ac
+#define MESSAGE_LEN   86
+#define SIGNATURE_LEN 64
+
+short Fee(double value)
 {
-public:
-	static std::string address(const char* sa)
+	byte sign = (byte)(value < 0.0 ? 1 : 0); // sign
+	int exp;   // exponent
+	long frac; // mantissa
+	value = abs(value);
+	double expf = value == 0.0 ? 0.0 : log10(value);
+	int expi = int(expf >= 0 ? expf + 0.5 : expf - 0.5);
+	value /= pow(10, expi);
+	if (value >= 1.0)
 	{
-		std::vector<unsigned char> evec;
-		DecodeBase58(sa, evec);
-		std::string dst(evec.size(), 0);
-		memcpy((void*)dst.c_str(), &(evec[0]), evec.size());
-		return dst;
+		value *= 0.1;
+		++expi;
 	}
-};
+	exp = expi + 18;
+	if (exp < 0 || exp > 28)
+	{
+		throw "exponent value exp out of range [0, 28]";
+	}
+	frac = (long)round(value * 1024);
+	return (short)(sign * 32768 + exp * 1024 + frac);
+}
+
+void cp(unsigned char* src,  unsigned char* dst, int offset)
+{
+	for (int i = 0; i < 32; i++)
+	{
+		dst[i + offset] = src[i];
+	}
+}
 
 int main()
 {
@@ -51,22 +72,68 @@ int main()
 	{
 		std::cout << "Transport was opened" << std::endl;
 
-		const char* ssa = "5B3YXqDTcWQFGAqEJQJP3Bg1ZK8FFtHtgCiFLT5VAxpe";
-		general::Address sa = ac::address(ssa);
+		keys ks("9onQndywomSUr6iYKA2MS5pERcTJwEuUJys1iKNu13cH",
+			   "4xVSMfNdGTdn32QHRoxx7GVUdRCUnqvpF5jDTxkvNzwpDNpiW27taPrQ9QjDacuH9GpU8SJA8XSR9Pb8o2H4GXp1",
+			   "H5ptdUUfjJBGiK2X3gN2EzNYxituCUUnXv2tiMdQKP3b");
 
-		WalletBalanceGetResult bg_res;
-		PoolHash ph;
-		TransactionFlowResult tr_res;
 		try
 		{
-			api->WalletBalanceGet(bg_res, sa);
+			WalletBalanceGetResult bg_res;
+			TransactionFlowResult tr_res;
+
+			api->WalletBalanceGet(bg_res, ks.PublicKeyBytes());
+			bg_res.printTo(std::cout);
+
+			WalletTransactionsCountGetResult wtcgr;
+			auto& pka = ks.PublicKeyBytes();
+			api->WalletTransactionsCountGet(wtcgr, pka);
+
+			Transaction tr;
+			tr.id = wtcgr.lastTransactionInnerId + 1;
+			tr.source = ks.PublicKeyBytes();
+			tr.target = ks.TargetPublicKeyBytes();
+			tr.amount = Amount();
+			tr.amount.integral = 1;
+			tr.amount.fraction = 0;
+			tr.fee = AmountCommission();
+			tr.fee.commission = Fee(0.9);
+			tr.currency = 1;
+
+			unsigned char message[MESSAGE_LEN];
+			unsigned char signature[SIGNATURE_LEN];
+
+			//reinterpret_cast<unsigned char*>((char*)s1.c_str())
+
+			unsigned char* source = reinterpret_cast<unsigned char*>((char*)tr.source.c_str());
+			unsigned char* target = reinterpret_cast<unsigned char*>((char*)tr.target.c_str());
+			unsigned char* pk = reinterpret_cast<unsigned char*>((char*)ks.PrivateKeyBytes().c_str());
+
+			memcpy(message, &tr.id, 6);
+			
+			cp(source, message, 6);
+			//memcpy(message + 6, &source, 32);
+			//memcpy(message + 38, &target, 32);
+			cp(target, message, 38);
+
+			memcpy(message + 70, &tr.amount.integral, 4);
+			memcpy(message + 74, &tr.amount.fraction, 8);
+			memcpy(message + 82, &tr.fee.commission, 2);
+			message[84] = 1;
+			message[85] = 0;
+
+			//ed25519_sign(signature, message, MESSAGE_LEN, (unsigned char*)ks.PublicKeyBytes().c_str(), (unsigned char*)ks.PrivateKeyBytes().c_str());
+			ed25519_sign(signature, message, MESSAGE_LEN, source, pk);
+			tr.signature = reinterpret_cast<char*>(signature);
+
+			TransactionFlowResult tfr;
+			api->TransactionFlow(tfr, tr);
+			tfr.printTo(std::cout);
 		}
 		catch (...)
 		{
 			return 1;
 		}
 
-		bg_res.printTo(std::cout);
 		std::cout << std::endl << std::endl;
 
 		transport->close();

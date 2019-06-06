@@ -17,6 +17,46 @@ https://cmake.org/
 The Apache Thrift software framework, for scalable cross-language services development, combines a software stack with a code generation engine to build services that work efficiently and seamlessly between C++, Java, Python, PHP, Ruby, Erlang, Perl, Haskell, C#, Cocoa, JavaScript, Node.js, Smalltalk, OCaml and Delphi and other languages.<br>
 https://thrift.apache.org/
 
+## Transaction field(Length in bytes)
+Id (6 bytes)<br>
+Source (32 bytes)<br>
+Target (32 bytes)<br>
+Amount.Integral (4 bytes)<br>
+Amount.Fraction (8 bytes)<br>
+Fee.Commission (2 bytes)<br>
+Currency (1 bytes)<br>
+
+## Concern
+It is necessary to convert commission value from double to short. For example:
+
+```shell
+// commission
+transaction.Fee = new AmountCommission(Fee(0.9));
+
+short Fee(double value)
+{
+	byte sign = (byte)(value < 0.0 ? 1 : 0); // sign
+	int exp;   // exponent
+	long frac; // mantissa
+	value = abs(value);
+	double expf = value == 0.0 ? 0.0 : log10(value);
+	int expi = int(expf >= 0 ? expf + 0.5 : expf - 0.5);
+	value /= pow(10, expi);
+	if (value >= 1.0)
+	{
+		value *= 0.1;
+		++expi;
+	}
+	exp = expi + 18;
+	if (exp < 0 || exp > 28)
+	{
+		throw "exponent value exp out of range [0, 28]";
+	}
+	frac = (long)round(value * 1024);
+	return (short)(sign * 32768 + exp * 1024 + frac);
+}
+```
+
 ## Using:
 ### Build for Windows
 ```shell

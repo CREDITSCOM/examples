@@ -48,6 +48,8 @@ add_executable(main
 	./common/base58.h
 	./api/general_constants.h
 	./api/general_types.h
+	keys.h
+	ac.h
 	./api/api_constants.cpp
 	./api/api_types.cpp
 	./api/API.cpp
@@ -55,6 +57,8 @@ add_executable(main
 	./api/general_constants.cpp
 	./api/general_types.cpp
 	./common/variant_aux.cpp
+	keys.cpp
+	ac.cpp
 	main.cpp
 )
 

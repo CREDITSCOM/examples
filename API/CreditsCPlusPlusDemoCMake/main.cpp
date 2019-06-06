@@ -92,37 +92,43 @@ int main()
 			tr.id = wtcgr.lastTransactionInnerId + 1;
 			tr.source = ks.PublicKeyBytes();
 			tr.target = ks.TargetPublicKeyBytes();
-			tr.amount = Amount();
 			tr.amount.integral = 1;
 			tr.amount.fraction = 0;
-			tr.fee = AmountCommission();
 			tr.fee.commission = Fee(0.9);
 			tr.currency = 1;
 
 			unsigned char message[MESSAGE_LEN];
 			unsigned char signature[SIGNATURE_LEN];
 
-			//reinterpret_cast<unsigned char*>((char*)s1.c_str())
-
 			unsigned char* source = reinterpret_cast<unsigned char*>((char*)tr.source.c_str());
 			unsigned char* target = reinterpret_cast<unsigned char*>((char*)tr.target.c_str());
 			unsigned char* pk = reinterpret_cast<unsigned char*>((char*)ks.PrivateKeyBytes().c_str());
 
 			memcpy(message, &tr.id, 6);
-			
 			cp(source, message, 6);
-			//memcpy(message + 6, &source, 32);
-			//memcpy(message + 38, &target, 32);
 			cp(target, message, 38);
-
 			memcpy(message + 70, &tr.amount.integral, 4);
 			memcpy(message + 74, &tr.amount.fraction, 8);
 			memcpy(message + 82, &tr.fee.commission, 2);
 			message[84] = 1;
 			message[85] = 0;
 
-			//ed25519_sign(signature, message, MESSAGE_LEN, (unsigned char*)ks.PublicKeyBytes().c_str(), (unsigned char*)ks.PrivateKeyBytes().c_str());
+			unsigned char seed[32];
+			if (ed25519_create_seed(seed)) {
+				printf("error while generating seed\n");
+				exit(1);
+			}
+
+			ed25519_create_keypair(source, pk, seed);
 			ed25519_sign(signature, message, MESSAGE_LEN, source, pk);
+
+			if (ed25519_verify(signature, message, MESSAGE_LEN, source)) {
+				printf("valid signature\n");
+			}
+			else {
+				printf("invalid signature\n");
+			}
+
 			tr.signature = reinterpret_cast<char*>(signature);
 
 			TransactionFlowResult tfr;

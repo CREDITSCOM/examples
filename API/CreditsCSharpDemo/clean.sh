@@ -1,5 +1,5 @@
 rm -r -f bin
-rm -r -f CS-API
+rm -r -f thrift-interface-definitions
 rm -r -f obj
 rm -r -f NodeApi
 

@@ -1,5 +1,5 @@
 wget https://credits.com/Content/file_users/Credits_Node_linux_x64_ver_4.2.416_testnet.tar.gz -P build Credits_Node_linux_x64_ver_4.2.416_testnet.tar.gz
-tar -xvzf Credits_Node_linux_x64_ver_4.2.416_testnet.tar.gz --strip-components 1 -C build
+tar -xvzf build/Credits_Node_linux_x64_ver_4.2.416_testnet.tar.gz --strip-components 1 -C build
 rm build/Credits_Node_linux_x64_ver_4.2.416_testnet.tar.gz
 
 g++ -pthread source/runner.cpp  -o build/runner

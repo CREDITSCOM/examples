@@ -4,11 +4,13 @@
 ### The user class must inherit from Serializable
 ```shell
 public static class Geo implements Serializable {                
-    private final int productId;                                 private final String latitude;                               
+    private final int productId;                                 
+    private final String latitude;                               
     private final String longitude;                               
     public Geo(int productId, String latitude, String longitude) {
         this.productId = productId;                              
-        this.latitude = latitude;                                this.longitude = longitude;                              
+        this.latitude = latitude;                                
+        this.longitude = longitude;                              
     }                                                            
 }                                                               
 ```

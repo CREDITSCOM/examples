@@ -52,9 +52,15 @@ void cp(unsigned char* src,  unsigned char* dst, int offset)
 	}
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	std::shared_ptr<TSocket> socket = std::shared_ptr<TSocket>(new TSocket("169.38.89.217", 9090));
+	if (argc != 5)
+	{
+		std::cout << "Usage: main.exe NodeIpAddress YourPublicKey YourPrivateKey TargetPublicKey" << std::endl;
+		return 1;
+	}
+
+	std::shared_ptr<TSocket> socket = std::shared_ptr<TSocket>(new TSocket(argv[1], 9090));
 	std::shared_ptr<TTransport> transport = std::shared_ptr<TTransport>(new TBufferedTransport(socket));
 	std::shared_ptr<TProtocol> protocol = std::shared_ptr<TProtocol>(new TBinaryProtocol(transport));
 	std::shared_ptr<APIClient> api = std::shared_ptr<APIClient>(new APIClient(protocol));
@@ -72,9 +78,9 @@ int main()
 	{
 		std::cout << "Transport was opened" << std::endl;
 
-		keys ks("9onQndywomSUr6iYKA2MS5pERcTJwEuUJys1iKNu13cH",
-			   "4xVSMfNdGTdn32QHRoxx7GVUdRCUnqvpF5jDTxkvNzwpDNpiW27taPrQ9QjDacuH9GpU8SJA8XSR9Pb8o2H4GXp1",
-			   "H5ptdUUfjJBGiK2X3gN2EzNYxituCUUnXv2tiMdQKP3b");
+		keys ks(argv[2],
+				argv[3],
+				argv[4]);
 
 		try
 		{

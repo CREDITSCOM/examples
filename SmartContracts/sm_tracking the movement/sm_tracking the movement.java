@@ -17,6 +17,9 @@ public class Contract extends SmartContract {
         return geoList;
     }
 
+    public int geoListSize(){
+        return geoList.size();
+    }
     
     public static class Geo implements Serializable {
         private final int productId;

@@ -20,6 +20,8 @@ using namespace api;
 
 #define MESSAGE_LEN   86
 #define SIGNATURE_LEN 64
+#define PUB_KEY_LEN 32
+#define PRV_KEY_LEN 64
 
 short Fee(double value)
 {
@@ -87,17 +89,17 @@ int main(int argc, char* argv[])
 			WalletBalanceGetResult bg_res;
 			TransactionFlowResult tr_res;
 
-			api->WalletBalanceGet(bg_res, ks.PublicKeyBytes());
+			api->WalletBalanceGet(bg_res, ks.PublicKeyAddress());
 			bg_res.printTo(std::cout);
 
 			WalletTransactionsCountGetResult wtcgr;
-			auto& pka = ks.PublicKeyBytes();
+			auto& pka = ks.PublicKeyAddress();
 			api->WalletTransactionsCountGet(wtcgr, pka);
 
 			Transaction tr;
 			tr.id = wtcgr.lastTransactionInnerId + 1;
-			tr.source = ks.PublicKeyBytes();
-			tr.target = ks.TargetPublicKeyBytes();
+			tr.source = std::string{ ks.PublicKeyAddress() };
+			tr.target = std::string{ ks.TargetPublicKeyAddress() };
 			tr.amount.integral = 1;
 			tr.amount.fraction = 0;
 			tr.fee.commission = Fee(0.9);
@@ -105,14 +107,17 @@ int main(int argc, char* argv[])
 
 			unsigned char message[MESSAGE_LEN];
 			unsigned char signature[SIGNATURE_LEN];
+			unsigned char src[PUB_KEY_LEN];
+			unsigned char trg[PUB_KEY_LEN];
+			unsigned char prv[PRV_KEY_LEN];
 
-			unsigned char* source = reinterpret_cast<unsigned char*>((char*)tr.source.c_str());
-			unsigned char* target = reinterpret_cast<unsigned char*>((char*)tr.target.c_str());
-			unsigned char* pk = reinterpret_cast<unsigned char*>((char*)ks.PrivateKeyBytes().c_str());
+			memcpy(src, (unsigned char*)tr.source.c_str(), 32);
+			memcpy(trg, (unsigned char*)tr.target.c_str(), 32);
+			memcpy(prv, (unsigned char*)ks.PrivateKeyAddress().c_str(), 64);
 
 			memcpy(message, &tr.id, 6);
-			cp(source, message, 6);
-			cp(target, message, 38);
+			cp(src, message, 6);
+			cp(trg, message, 38);
 			memcpy(message + 70, &tr.amount.integral, 4);
 			memcpy(message + 74, &tr.amount.fraction, 8);
 			memcpy(message + 82, &tr.fee.commission, 2);
@@ -125,17 +130,17 @@ int main(int argc, char* argv[])
 				exit(1);
 			}
 
-			ed25519_create_keypair(source, pk, seed);
-			ed25519_sign(signature, message, MESSAGE_LEN, source, pk);
+			ed25519_create_keypair(src, prv, seed);
+			ed25519_sign(signature, message, MESSAGE_LEN, src, prv);
 
-			if (ed25519_verify(signature, message, MESSAGE_LEN, source)) {
+			if (ed25519_verify(signature, message, MESSAGE_LEN, src)) {
 				printf("valid signature\n");
 			}
 			else {
 				printf("invalid signature\n");
 			}
 
-			tr.signature = reinterpret_cast<char*>(signature);
+			tr.signature = std::string{ reinterpret_cast<char*>(signature), SIGNATURE_LEN };
 
 			TransactionFlowResult tfr;
 			api->TransactionFlow(tfr, tr);

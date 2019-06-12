@@ -84,9 +84,11 @@ cd ..
 mkdir build64
 cd build64
 
+REM !!! change the BOOST place of this part of string, for example: -DBOOST_ROOT=d:\boost
 REM cmake .. -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Debug -A x64 ..
 REM cmake  --build . --config Debug
 
+REM !!! change the BOOST place of this part of string, for example: -DBOOST_ROOT=d:\boost
 cmake -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Release -A x64 ..
 cmake  --build . --config Release
 

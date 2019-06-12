@@ -4,7 +4,7 @@
 #include <ctime>
 #include <array>
 
-#include "ed25519/src/ed25519.h"
+#include <sodium.h>
 
 #include <thrift/stdcxx.h>
 #include <thrift/transport/TSocket.h>
@@ -124,20 +124,12 @@ int main(int argc, char* argv[])
 			message[84] = 1;
 			message[85] = 0;
 
-			unsigned char seed[32];
-			if (ed25519_create_seed(seed)) {
-				printf("error while generating seed\n");
-				exit(1);
-			}
+			unsigned long long signatureLen;
+			crypto_sign_detached(signature, &signatureLen, message, MESSAGE_LEN, prv);
 
-			ed25519_create_keypair(src, prv, seed);
-			ed25519_sign(signature, message, MESSAGE_LEN, src, prv);
-
-			if (ed25519_verify(signature, message, MESSAGE_LEN, src)) {
-				printf("valid signature\n");
-			}
-			else {
-				printf("invalid signature\n");
+			if (crypto_sign_verify_detached(signature, message, MESSAGE_LEN, src) != 0) {
+				std::cout << "Incorrect signature!" << std::endl;
+				return 1;
 			}
 
 			tr.signature = std::string{ reinterpret_cast<char*>(signature), SIGNATURE_LEN };

@@ -66,9 +66,12 @@ build64.cmd
 ### The content of build64.cmd
 ```shell
 rmdir /S /Q build64
-rmdir /S /Q CS-API
+rmdir /S /Q thrift-interface-definitions
 rmdir /S /Q thrift
 rmdir /S /Q api
+rmdir /S /Q libsodium
+
+git clone https://github.com/jedisct1/libsodium.git
 
 git clone https://github.com/CREDITSCOM/thrift-interface-definitions
 mkdir api
@@ -81,8 +84,10 @@ cd ..
 mkdir build64
 cd build64
 
-cmake .. -A x64 
-cmake  --build . --config Debug
+REM cmake .. -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Debug -A x64 ..
+REM cmake  --build . --config Debug
+
+cmake -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Release -A x64 ..
 cmake  --build . --config Release
 
 pause
@@ -107,9 +112,11 @@ pause
 ### The content of build64.sh
 ```shell
 rm -r -f build64
-rm -r -f CS-API
+rm -r -f thrift-interface-definitions
 rm -r -f thrift
 rm -r -f api
+
+git clone https://github.com/jedisct1/libsodium.git
 
 git clone https://github.com/CREDITSCOM/thrift-interface-definitions
 mkdir api
@@ -122,7 +129,6 @@ cd ..
 mkdir build64
 cd build64
 
-cmake ..
 cmake  --build . --config Debug
 cmake  --build . --config Release
 ```

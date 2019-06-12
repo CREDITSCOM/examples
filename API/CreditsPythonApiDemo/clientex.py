@@ -74,8 +74,17 @@ class ClientEx:
                                   0                                       # b - 1 byte userfield_num
         )
 
+        for x in serial_transaction:
+            print(x, end = " ")
+
+        print("")
+
         signing_key = ed25519.SigningKey(keys.private_key_bytes)
+
         sign = signing_key.sign(serial_transaction)
+
+        for x in sign:
+            print(x, end = " ")
 
         tr.signature = sign
 

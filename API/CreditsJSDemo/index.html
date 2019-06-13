@@ -17,25 +17,28 @@
     <script>
         function run()
        {
-            var pubkey = "the your public key";
+            var pubkey = "your public key";
             var prvkey = "your private key";
             var trgKey = "target publc key";
             var url = "http://127.0.0.1:8081";
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
 
-            var tranFlow = client.executeTransactin(1, 0.9);
-            if(tranFlow === null) {
-                document.getElementById('tr-st-id').innerText = "Error of creating a transaction";
-            }
-            else {
-                document.getElementById('tr-st-id').innerText = tranFlow.status.message;
-            }
+            //client.createTransactionWithSmartContract(0.9, '');
+            client.executeTransactinWithSmartContract(0.9, '')
 
-            var obj = client.walletGetBalance();
-            console.log(obj);
-            document.getElementById('pc-id').innerText = client.publicKey;
-            document.getElementById('bl-id').innerText = 'Integral: ' + obj.integral + ', Fraction: ' + obj.fraction;
+            // var tranFlow = client.executeTransactin(1, 0.9);
+            // if(tranFlow === null) {
+            //     document.getElementById('tr-st-id').innerText = "Error of creating a transaction";
+            // }
+            // else {
+            //     document.getElementById('tr-st-id').innerText = tranFlow.status.message;
+            // }
+
+            // var obj = client.walletGetBalance();
+            // console.log(obj);
+            // document.getElementById('pc-id').innerText = client.publicKey;
+            // document.getElementById('bl-id').innerText = 'Integral: ' + obj.integral + ', Fraction: ' + obj.fraction;
         }
         function ready() {
             run();

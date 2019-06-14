@@ -19,13 +19,13 @@
        {
             var pubkey = "your public key";
             var prvkey = "your private key";
-            var trgKey = "target publc key";
+            var trgKey = "your target key";
             var url = "http://127.0.0.1:8081";
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
 
             //client.createTransactionWithSmartContract(0.9, '');
-            client.executeTransactinWithSmartContract(0.9, '')
+            client.executeTransactinWithSmartContract(2, '')
 
             // var tranFlow = client.executeTransactin(1, 0.9);
             // if(tranFlow === null) {

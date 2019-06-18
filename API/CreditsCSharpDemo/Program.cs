@@ -112,6 +112,13 @@ namespace CreditsCSAPIDemo
                 return null;
             }
 
+            transaction.SmartContract = new SmartContractInvocation();
+            transaction.SmartContract.SmartContractDeploy = new SmartContractDeploy()
+            {
+                ByteCodeObjects = byteCode.ByteCodeObjects,
+                SourceCode = smCode
+            };
+
             transaction.Target = SauceControl.Blake2Fast.Blake2s.ComputeHash(target.ToArray());
 
             var bytes = new byte[86];

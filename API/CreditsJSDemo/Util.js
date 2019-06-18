@@ -110,6 +110,66 @@ class CreditsUtils {
         PerStr = this.concatTypedArrays(PerStr, this.numbToByte(tran.fee.commission, 2));
         PerStr = this.concatTypedArrays(PerStr, new Uint8Array([1]));
         PerStr = this.concatTypedArrays(PerStr, new Uint8Array(1));
+
+        let UserField = new Uint8Array();
+        tran.smartContract = new SmartContractInvocation();
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 1]));
+        UserField = this.concatTypedArrays(UserField, new Uint8Array(4));
+
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([15, 0, 2, 12]));
+        UserField = this.concatTypedArrays(UserField, new Uint8Array(4));
+
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([15, 0, 3, 11, 0, 0, 0, 0]));
+
+        tran.smartContract.forgetNewState = false;
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([2, 0, 4, 0]));
+
+        if (smCode !== undefined) {
+            UserField = this.concatTypedArrays(UserField, new Uint8Array([12, 0, 5, 11, 0, 1]));
+
+            tran.smartContract.smartContractDeploy = new SmartContractDeploy({
+                sourceCode: smCode
+            });
+
+            UserField = this.concatTypedArrays(UserField, this.numbToByte(smCode.length, 4).reverse());
+            UserField = this.concatTypedArrays(UserField, this.convertCharToByte(smCode));
+
+            UserField = this.concatTypedArrays(UserField, new Uint8Array([15, 0, 2, 12]));
+            let ByteCode = this.client().SmartContractCompile(smCode);
+
+            if (ByteCode.status.code === 0) {
+                tran.smartContract.smartContractDeploy.byteCodeObjects = [];
+                UserField = this.concatTypedArrays(UserField, this.numbToByte(ByteCode.byteCodeObjects.length, 4).reverse());
+
+                for (let i in ByteCode.byteCodeObjects) {
+                    
+                    let val = ByteCode.byteCodeObjects[i];
+                    UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 1]));
+                    UserField = this.concatTypedArrays(UserField, this.numbToByte(val.name.length, 4).reverse());
+                    UserField = this.concatTypedArrays(UserField, this.convertCharToByte(val.name));
+
+                    UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 2]));
+                    UserField = this.concatTypedArrays(UserField, this.numbToByte(val.byteCode.length, 4).reverse());
+                    UserField = this.concatTypedArrays(UserField, this.convertCharToByte(val.byteCode));
+                    tran.smartContract.smartContractDeploy.byteCodeObjects.push(new ByteCodeObject({
+                        name: val.name,
+                        byteCode: val.byteCode
+                    }));
+                    UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+                }
+            }
+            else {
+                ResObj.Message = ByteCode.Status.Message;
+                return ResObj;
+            }
+
+            UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 3, 0, 0, 0, 0, 8, 0, 4, 0, 0, 0, 0, 0]));
+        }
+
+        UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+        PerStr = this.concatTypedArrays(PerStr, this.numbToByte(UserField.length, 4));
+        PerStr = this.concatTypedArrays(PerStr, UserField);
+
         tran.signature = nacl.sign.detached(PerStr, this.privateKeyByte);
         return tran;
     }

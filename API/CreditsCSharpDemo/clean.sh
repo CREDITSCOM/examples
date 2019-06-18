@@ -4,6 +4,7 @@ rm -r -f obj
 rm -r -f NodeApi
 
 rm Annotation.cs
+rm Amount.cs
 rm APIResponse.cs
 rm ByteCodeObject.cs
 rm MethodArgument.cs

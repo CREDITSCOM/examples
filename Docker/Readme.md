@@ -4,5 +4,5 @@
 Using Credits (version 4_2_410) in Docker
 
 ## credits_docker_testnet
-Using Credits (version 4.2.412.3) in Docker
+Using Credits (version 4.2.417) in Docker
 

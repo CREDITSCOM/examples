@@ -7,6 +7,7 @@ using System.IO;
 using Thrift.Protocol;
 using Thrift.Transport;
 using SauceControl.Blake2Fast;
+using System.Text;
 
 namespace CreditsCSAPIDemo
 {
@@ -81,6 +82,12 @@ namespace CreditsCSAPIDemo
             return transaction;
         }
 
+        private byte[] Reverse(byte[] arr)
+        {
+            Array.Reverse(arr, 0, arr.Length);
+            return arr;
+        }
+
         private Transaction CreateTransactionWithSmartContract(string smCode)
         {
             if (smCode == "")
@@ -92,7 +99,7 @@ namespace CreditsCSAPIDemo
             transaction.Source = sourceKeys.PublicKeyBytes;
             transaction.Target = targetKeys.PublicKeyBytes;
             transaction.Amount = new Amount(0, 0);
-            transaction.Fee = new AmountCommission(Fee(2.0));
+            transaction.Fee = new AmountCommission(Fee(1.0));
             transaction.Currency = 1;
 
             List<byte> target = new List<byte>(transaction.Source);
@@ -115,24 +122,62 @@ namespace CreditsCSAPIDemo
             transaction.SmartContract = new SmartContractInvocation();
             transaction.SmartContract.SmartContractDeploy = new SmartContractDeploy()
             {
-                ByteCodeObjects = byteCode.ByteCodeObjects,
-                SourceCode = smCode
+                SourceCode = smCode,
             };
-
+            transaction.SmartContract.ForgetNewState = false;
             transaction.Target = SauceControl.Blake2Fast.Blake2s.ComputeHash(target.ToArray());
 
-            var bytes = new byte[86];
-            Array.Copy(BitConverter.GetBytes(transaction.Id), 0, bytes, 0, 6);
-            Array.Copy(transaction.Source, 0, bytes, 6, 32);
-            Array.Copy(transaction.Target, 0, bytes, 38, 32);
-            Array.Copy(BitConverter.GetBytes(transaction.Amount.Integral), 0, bytes, 70, 4);
-            Array.Copy(BitConverter.GetBytes(transaction.Amount.Fraction), 0, bytes, 74, 8);
-            Array.Copy(BitConverter.GetBytes(transaction.Fee.Commission), 0, bytes, 82, 2);
-            bytes[84] = 1;
-            bytes[85] = 0;
+            var tarr = new byte[6];
+            var bytes = new List<byte>();
 
-            var signature = Ed25519.Sign(bytes, sourceKeys.PrivateKeyBytes);
-            var verifyResult = Ed25519.Verify(signature, bytes, sourceKeys.PublicKeyBytes);
+            Array.Copy(BitConverter.GetBytes(transaction.Id), 0, tarr, 0, 6);
+            bytes.AddRange(tarr);
+            bytes.AddRange(transaction.Source);
+            bytes.AddRange(transaction.Target);
+            bytes.AddRange(BitConverter.GetBytes(transaction.Amount.Integral));
+            bytes.AddRange(BitConverter.GetBytes(transaction.Amount.Fraction));
+            bytes.AddRange(BitConverter.GetBytes(transaction.Fee.Commission));
+            bytes.Add(1);
+            bytes.Add(1);
+
+            var uf = new List<byte>();
+            uf.AddRange(new byte[] { 11, 0, 1, 0, 0, 0, 0, 15, 0, 2, 12, 0, 0, 0, 0, 15, 0, 3, 11, 0, 0, 0, 0, 2, 0, 4, 0, 12, 0, 5, 11, 0, 1 });
+
+            uf.AddRange(Reverse(BitConverter.GetBytes(smCode.Length))); //reverse ???
+
+            uf.AddRange(Encoding.Default.GetBytes(smCode));
+            uf.AddRange(new byte[] { 15, 0, 2, 12 });
+            uf.AddRange(Reverse(BitConverter.GetBytes(byteCode.ByteCodeObjects.Count))); //reverse ???
+
+            foreach (var bco in byteCode.ByteCodeObjects)
+            {
+
+                uf.AddRange(new byte[] { 11, 0, 1 });
+                uf.AddRange(Reverse(BitConverter.GetBytes(bco.Name.Length))); //reverse ???
+                uf.AddRange(Encoding.Default.GetBytes(bco.Name));
+                uf.AddRange(new byte[] { 11, 0, 2 });
+                uf.AddRange(Reverse(BitConverter.GetBytes(bco.ByteCode.Length))); //reverse ???
+                uf.AddRange(bco.ByteCode);
+                transaction.SmartContract.SmartContractDeploy.ByteCodeObjects = new List<ByteCodeObject>()
+                {
+                    new ByteCodeObject()
+                    {
+                        Name = bco.Name,
+                        ByteCode = bco.ByteCode
+                    }
+                };
+
+                uf.Add(0);
+            }
+
+            uf.AddRange(new byte[] { 11, 0, 3, 0, 0, 0, 0, 8, 0, 4, 0, 0, 0, 0, 0 });
+            uf.Add(0);
+
+            bytes.AddRange(BitConverter.GetBytes(uf.Count)); //reverse ???
+            bytes.AddRange(uf.ToArray());
+
+            var signature = Ed25519.Sign(bytes.ToArray(), sourceKeys.PrivateKeyBytes);
+            var verifyResult = Ed25519.Verify(signature, bytes.ToArray(), sourceKeys.PublicKeyBytes);
             if (!verifyResult) throw new Exception("Signature could not be verified");
 
             transaction.Signature = signature;

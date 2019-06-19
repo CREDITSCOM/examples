@@ -96,8 +96,9 @@ class CreditsUtils {
             }
         }
         else {
-            ResObj.Message = ByteCode.status.message;
-            return ResObj;
+            //ResObj.Message = ByteCode.status.message;
+            //return ResObj;
+            return byteCode.status.message;
         }
 
         tran.target = this.blake2s(target);
@@ -109,7 +110,7 @@ class CreditsUtils {
         PerStr = this.concatTypedArrays(PerStr, this.numbToByte(tran.amount.fraction, 8));
         PerStr = this.concatTypedArrays(PerStr, this.numbToByte(tran.fee.commission, 2));
         PerStr = this.concatTypedArrays(PerStr, new Uint8Array([1]));
-        PerStr = this.concatTypedArrays(PerStr, new Uint8Array(1));
+        PerStr = this.concatTypedArrays(PerStr, new Uint8Array([1]));
 
         let UserField = new Uint8Array();
         tran.smartContract = new SmartContractInvocation();
@@ -159,8 +160,9 @@ class CreditsUtils {
                 }
             }
             else {
-                ResObj.Message = ByteCode.Status.Message;
-                return ResObj;
+                //ResObj.Message = ByteCode.Status.Message;
+                //return ResObj;
+                return ByteCode.Status.Message;
             }
 
             UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 3, 0, 0, 0, 0, 8, 0, 4, 0, 0, 0, 0, 0]));
@@ -169,6 +171,14 @@ class CreditsUtils {
         UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
         PerStr = this.concatTypedArrays(PerStr, this.numbToByte(UserField.length, 4));
         PerStr = this.concatTypedArrays(PerStr, UserField);
+
+        var ArHex = "0123456789ABCDEF";
+        var Hex = "";
+        for (let j = 0; j < PerStr.length; j++) {
+            Hex += ArHex[Math.floor(PerStr[j] / 16)];
+            Hex += ArHex[Math.floor(PerStr[j] % 16)];
+        }
+        console.log(Hex);
 
         tran.signature = nacl.sign.detached(PerStr, this.privateKeyByte);
         return tran;

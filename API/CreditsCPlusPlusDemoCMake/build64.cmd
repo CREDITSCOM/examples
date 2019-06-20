@@ -17,10 +17,10 @@ cd ..
 mkdir build64
 cd build64
 
-REM cmake .. -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Debug -A x64 ..
-REM cmake  --build . --config Debug
+cmake .. -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Debug -A x64 ..
+cmake  --build . --config Debug
 
-cmake -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Release -A x64 ..
-cmake  --build . --config Release
+rem cmake -DBOOST_ROOT=d:\boost -DCMAKE_BUILD_TYPE=Release -A x64 ..
+rem cmake  --build . --config Release
 
 pause

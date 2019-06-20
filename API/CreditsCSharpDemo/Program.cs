@@ -92,7 +92,7 @@ namespace CreditsCSAPIDemo
         {
             if (smCode == "")
                 smCode =
-                "import com.credits.scapi.annotations.*; import com.credits.scapi.v0.*; public class MySmartContract extends SmartContract { public MySmartContract() {} public String hello() { return \"Hello\"; } }";
+                "import com.credits.scapi.annotations.*; import com.credits.scapi.v0.*; public class MySmartContract extends SmartContract { public MySmartContract() {} public String hello2(String say) { return \"Hello\" + say; } }";
 
             var transaction = new Transaction();
             transaction.Id = client.WalletTransactionsCountGet(sourceKeys.PublicKeyBytes).LastTransactionInnerId + 1;
@@ -102,8 +102,13 @@ namespace CreditsCSAPIDemo
             transaction.Fee = new AmountCommission(Fee(1.0));
             transaction.Currency = 1;
 
+            var tarr = new byte[6];
+
             List<byte> target = new List<byte>(transaction.Source);
-            target.AddRange(BitConverter.GetBytes(transaction.Id));
+
+            Array.Copy(BitConverter.GetBytes(transaction.Id), 0, tarr, 0, 6);
+            target.AddRange(tarr);
+
             var byteCode = client.SmartContractCompile(smCode);
 
             if (byteCode.Status.Code == 0)
@@ -127,7 +132,6 @@ namespace CreditsCSAPIDemo
             transaction.SmartContract.ForgetNewState = false;
             transaction.Target = SauceControl.Blake2Fast.Blake2s.ComputeHash(target.ToArray());
 
-            var tarr = new byte[6];
             var bytes = new List<byte>();
 
             Array.Copy(BitConverter.GetBytes(transaction.Id), 0, tarr, 0, 6);

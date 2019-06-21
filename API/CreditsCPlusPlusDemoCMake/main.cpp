@@ -36,5 +36,6 @@ int main(int argc, char* argv[])
 
 	c->wallet_balance_get();
 	c->transfer_coins(1, 0, 0.9);
+	//c->deploy_smart("", 1);
 }
 

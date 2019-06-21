@@ -3,8 +3,10 @@ rmdir /S /Q thrift-interface-definitions
 rmdir /S /Q thrift
 rmdir /S /Q api
 rmdir /S /Q libsodium
+rmdir /S /Q blake2
 
 git clone https://github.com/jedisct1/libsodium.git
+git clone https://github.com/CREDITSCOM/blake2.git
 
 git clone https://github.com/CREDITSCOM/thrift-interface-definitions
 mkdir api

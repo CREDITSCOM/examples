@@ -1,17 +1,17 @@
+#include <blake2.h>
 #include "client.h"
 
-using namespace std;
 using namespace apache::thrift::transport;
 using namespace apache::thrift::protocol;
 using namespace api;
 using namespace general;
 
-client::client(string ip, int port)
+client::client(std::string ip, int port)
 {
-	m_socket = shared_ptr<TSocket>(new TSocket(ip, port));
-	m_transport = shared_ptr<TTransport>(new TBufferedTransport(m_socket));
-	m_protocol = shared_ptr<TProtocol>(new TBinaryProtocol(m_transport));
-	m_api = shared_ptr<APIClient>(new APIClient(m_protocol));
+	m_socket = std::shared_ptr<TSocket>(new TSocket(ip, port));
+	m_transport = std::shared_ptr<TTransport>(new TBufferedTransport(m_socket));
+	m_protocol = std::shared_ptr<TProtocol>(new TBinaryProtocol(m_transport));
+	m_api = std::shared_ptr<APIClient>(new APIClient(m_protocol));
 	
 	connect();
 }
@@ -23,7 +23,7 @@ client::~client()
 
 void client::set_keys(const std::string& publicKey, const std::string& privateKey, const std::string& targetKey)
 {
-	m_keys = make_unique<keys>(publicKey.c_str(), privateKey.c_str(), targetKey.c_str());
+	m_keys = std::make_unique<keys>(publicKey.c_str(), privateKey.c_str(), targetKey.c_str());
 }
 
 void client::wallet_balance_get()
@@ -36,7 +36,7 @@ void client::wallet_balance_get()
 	}
 	catch (const std::exception&)
 	{
-		throw exception("wallet_balance_get: calling error");
+		throw std::exception("wallet_balance_get: calling error");
 	}
 }
 
@@ -51,7 +51,22 @@ void client::transfer_coins(int32_t integral, int32_t fraction, double fee_value
 	}
 	catch (const std::exception ex)
 	{
-		throw exception(ex.what());
+		throw std::exception(ex.what());
+	}
+}
+
+void client::deploy_smart(std::string code, double fee_value)
+{
+	try
+	{
+		auto tr = make_transaction_with_smart_contract(code, fee_value);
+		TransactionFlowResult tfr;
+		m_api->TransactionFlow(tfr, *tr);
+		tfr.printTo(std::cout);
+	}
+	catch (const std::exception ex)
+	{
+		throw std::exception(ex.what());
 	}
 }
 
@@ -63,7 +78,7 @@ void client::connect()
 	}
 	catch (...)
 	{
-		throw exception("thrift error: failed connect to node");
+		throw std::exception("thrift error: failed connect to node");
 	}
 }
 
@@ -75,7 +90,7 @@ void client::disconnect()
 	}
 	catch (...)
 	{
-		throw exception("thrift error: failed disconnect from node");
+		throw std::exception("thrift error: failed disconnect from node");
 	}
 }
 
@@ -102,17 +117,93 @@ short client::fee(double value)
 	return (short)(sign * 32768 + exp * 1024 + frac);
 }
 
-void client::cp(unsigned char* src,  unsigned char* dst, int offset)
+template<class T>
+void client::cp(std::vector<byte>& arr, T& value, int16_t size)
 {
-	for (int i = 0; i < 32; i++)
+	auto temp = std::make_unique<byte[]>(size);
+	memcpy(&temp[0], &value, size);
+	std::copy(&temp[0], &temp[size], back_inserter(arr));
+}
+
+std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(std::string code, double fee_value)
+{
+	if (code.length() == 0)
+		code = "import com.credits.scapi.annotations.*; import com.credits.scapi.v0.*; public class MySmartContract extends SmartContract { public MySmartContract() {} public String hello2(String say) { return \"Hello\" + say; } }";
+
+	auto tr = std::make_unique<api::Transaction>();
+
+	WalletTransactionsCountGetResult wtcgr;
+	auto& pka = m_keys->PublicKeyAddress();
+	m_api->WalletTransactionsCountGet(wtcgr, pka);
+
+	tr->id = wtcgr.lastTransactionInnerId + 1;
+	tr->source = std::string{ m_keys->PublicKeyAddress() };
+	tr->target = std::string{ m_keys->TargetPublicKeyAddress() };
+	tr->amount.integral = 0;
+	tr->amount.fraction = 0;
+	tr->fee.commission = fee(fee_value);
+	tr->currency = 1;
+	
+	std::vector<byte> target;
+	copy(&((unsigned char*)tr->source.c_str())[0], 
+		 &((unsigned char*)tr->source.c_str())[tr->source.size()], 
+		 back_inserter(target));
+	cp(target, tr->id, 6);
+
+	SmartContractCompileResult sccr;
+	m_api->SmartContractCompile(sccr, code);
+	if (sccr.status.code == 0)
 	{
-		dst[i + offset] = src[i];
+		for (int i = 0; i < sccr.byteCodeObjects.size(); i++)
+		{
+			copy(&((unsigned char*)sccr.byteCodeObjects[i].byteCode.c_str())[0], 
+				 &((unsigned char*)sccr.byteCodeObjects[i].byteCode.c_str())[sccr.byteCodeObjects[i].byteCode.size()], 
+				 back_inserter(target));
+		}
 	}
+	else
+	{
+		throw std::exception(sccr.status.message.c_str());
+	}
+
+	tr->smartContract.smartContractDeploy.sourceCode = code;
+	tr->smartContract.forgetNewState = false;
+
+	//Hash calculateHash(const Byte * data, size_t dataSize, const Byte * key, size_t keySize) {
+	//	Hash hash;
+	//	blake2s(hash.data(), BLAKE2S_OUTBYTES, data, dataSize, key, keySize);
+	//	return hash;
+	//}
+
+	//Hash hash;
+	//blake2s()
+
+	//std::vector<byte> msg;
+	//cp(msg, tr->id, 6);
+	//copy(&((unsigned char*)tr->source.c_str())[0], &((unsigned char*)tr->source.c_str())[tr->source.size()], back_inserter(msg));
+	//copy(&((unsigned char*)tr->target.c_str())[0], &((unsigned char*)tr->target.c_str())[tr->target.size()], back_inserter(msg));
+	//cp(msg, tr->amount.integral, 4);
+	//cp(msg, tr->amount.fraction, 8);
+	//cp(msg, tr->fee.commission, 2);
+	//msg.push_back(1);
+	//msg.push_back(0);
+
+	//unsigned char signature[SIGNATURE_LEN];
+	//unsigned long long signatureLen;
+	//crypto_sign_detached(signature, &signatureLen, msg.data(), msg.size(), (unsigned char*)m_keys->PrivateKeyAddress().c_str());
+
+	//if (crypto_sign_verify_detached(signature, msg.data(), msg.size(), (unsigned char*)tr->source.c_str()) != 0) {
+	//	throw std::exception("Incorrect signature!");
+	//}
+
+	//tr->signature = std::string{ reinterpret_cast<char*>(signature), SIGNATURE_LEN };
+
+	return std::move(tr);
 }
 
 std::unique_ptr<api::Transaction> client::make_transaction(int32_t integral, int32_t fraction, double fee_value)
 {
-	auto tr = make_unique<api::Transaction>();
+	auto tr = std::make_unique<api::Transaction>();
 
 	WalletTransactionsCountGetResult wtcgr;
 	auto& pka = m_keys->PublicKeyAddress();
@@ -126,30 +217,23 @@ std::unique_ptr<api::Transaction> client::make_transaction(int32_t integral, int
 	tr->fee.commission = fee(fee_value);
 	tr->currency = 1;
 
-	unsigned char message[MESSAGE_LEN];
+	std::vector<byte> msg;
+
+	cp(msg, tr->id, 6);
+	copy(&((unsigned char*)tr->source.c_str())[0], &((unsigned char*)tr->source.c_str())[tr->source.size()], back_inserter(msg));
+	copy(&((unsigned char*)tr->target.c_str())[0], &((unsigned char*)tr->target.c_str())[tr->target.size()], back_inserter(msg));
+	cp(msg, tr->amount.integral, 4);
+	cp(msg, tr->amount.fraction, 8);
+	cp(msg, tr->fee.commission, 2);
+	msg.push_back(1);
+	msg.push_back(0);
+
 	unsigned char signature[SIGNATURE_LEN];
-	unsigned char src[PUB_KEY_LEN];
-	unsigned char trg[PUB_KEY_LEN];
-	unsigned char prv[PRV_KEY_LEN];
-
-	memcpy(src, (unsigned char*)tr->source.c_str(), 32);
-	memcpy(trg, (unsigned char*)tr->target.c_str(), 32);
-	memcpy(prv, (unsigned char*)m_keys->PrivateKeyAddress().c_str(), 64);
-
-	memcpy(message, &tr->id, 6);
-	cp(src, message, 6);
-	cp(trg, message, 38);
-	memcpy(message + 70, &tr->amount.integral, 4);
-	memcpy(message + 74, &tr->amount.fraction, 8);
-	memcpy(message + 82, &tr->fee.commission, 2);
-	message[84] = 1;
-	message[85] = 0;
-
 	unsigned long long signatureLen;
-	crypto_sign_detached(signature, &signatureLen, message, MESSAGE_LEN, prv);
+	crypto_sign_detached(signature, &signatureLen, msg.data(), msg.size(), (unsigned char*)m_keys->PrivateKeyAddress().c_str());
 
-	if (crypto_sign_verify_detached(signature, message, MESSAGE_LEN, src) != 0) {
-		throw exception("Incorrect signature!");
+	if (crypto_sign_verify_detached(signature, msg.data(), msg.size(), (unsigned char*)tr->source.c_str()) != 0) {
+		throw std::exception("Incorrect signature!");
 	}
 
 	tr->signature = std::string{ reinterpret_cast<char*>(signature), SIGNATURE_LEN };

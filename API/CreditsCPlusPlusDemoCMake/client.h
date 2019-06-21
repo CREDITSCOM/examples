@@ -3,6 +3,7 @@
 #include <memory>
 #include <sodium.h>
 #include <iostream>
+#include <string>
 
 #include <thrift/stdcxx.h>
 #include <thrift/transport/TSocket.h>
@@ -12,10 +13,7 @@
 #include "api/API.h"
 #include "keys.h"
 
-#define MESSAGE_LEN   86
 #define SIGNATURE_LEN 64
-#define PUB_KEY_LEN 32
-#define PRV_KEY_LEN 64
 
 class client
 {
@@ -30,8 +28,10 @@ private:
 	void connect();
 	void disconnect();
 	short fee(double value);
-	void cp(unsigned char* src, unsigned char* dst, int offset);
+	std::unique_ptr<api::Transaction> make_transaction_with_smart_contract(std::string code, double fee_value);
 	std::unique_ptr<api::Transaction> make_transaction(int32_t integral, int32_t fraction, double fee_value);
+	template<class T>
+	void cp(std::vector<byte>& arr, T& value, int16_t size);
 
 public:
 	client(std::string ip, int port);
@@ -41,5 +41,6 @@ public:
 
 	void wallet_balance_get();
 	void transfer_coins(int32_t integral, int32_t fraction, double fee_value);
+	void deploy_smart(std::string code, double fee_value);
 };
 

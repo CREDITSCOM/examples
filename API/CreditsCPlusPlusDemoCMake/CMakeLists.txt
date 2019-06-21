@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(libsodium_dir ${CMAKE_CURRENT_SOURCE_DIR}/libsodium/)
 
@@ -102,12 +102,14 @@ option(WITH_STDTHREADS "" ON)
 option(WITH_LIBEVENT "" OFF)
 option(WITH_OPENSSL "" OFF)
 add_subdirectory(thrift)
+add_subdirectory(blake2)
 
 find_package(Boost 1.68 REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories("./thrift/lib/cpp/src")
 include_directories("./libsodium/src/libsodium/include")
+include_directories("./blake2/sse")
 
 add_executable(main
 	./api/api_constants.h
@@ -133,6 +135,6 @@ add_executable(main
 )
 
 target_link_libraries(main ${Boost_LIBRARIES})
-target_link_libraries(main libsodium)
+target_link_libraries(main blake2 libsodium)
 target_compile_definitions(main PUBLIC SODIUM_STATIC)
 target_link_libraries(main thrift_static)

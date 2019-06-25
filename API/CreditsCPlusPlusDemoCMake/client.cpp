@@ -118,11 +118,13 @@ short client::fee(double value)
 }
 
 template<class T>
-void client::cp(std::vector<byte>& arr, T& value, int16_t size)
+void client::cp(std::vector<byte>& arr, T& value, int16_t size, bool reverse)
 {
 	auto temp = std::make_unique<byte[]>(size);
 	memcpy(&temp[0], &value, size);
 	std::copy(&temp[0], &temp[size], back_inserter(arr));
+	if(reverse)
+		std::reverse(arr.begin(), arr.end());
 }
 
 std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(std::string code, double fee_value)
@@ -148,7 +150,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 	copy(&((unsigned char*)tr->source.c_str())[0], 
 		 &((unsigned char*)tr->source.c_str())[tr->source.size()], 
 		 back_inserter(target));
-	cp(target, tr->id, 6);
+	cp(target, tr->id, 6, false);
 
 	SmartContractCompileResult sccr;
 	m_api->SmartContractCompile(sccr, code);
@@ -169,24 +171,36 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 	tr->smartContract.smartContractDeploy.sourceCode = code;
 	tr->smartContract.forgetNewState = false;
 
-	//Hash calculateHash(const Byte * data, size_t dataSize, const Byte * key, size_t keySize) {
-	//	Hash hash;
-	//	blake2s(hash.data(), BLAKE2S_OUTBYTES, data, dataSize, key, keySize);
-	//	return hash;
-	//}
+	byte hash[32];
+	blake2s(hash, BLAKE2S_OUTBYTES, target.data(), target.size(), m_keys->PublicKeyAddress().c_str(), 32);
+	std::copy(&hash[0], &hash[32], back_inserter(tr->target));
 
-	//Hash hash;
-	//blake2s()
+	std::vector<byte> msg;
+	cp(msg, tr->id, 6, false);
+	
+	copy(&((unsigned char*)tr->source.c_str())[0], &((unsigned char*)tr->source.c_str())[tr->source.size()], back_inserter(msg));
+	copy(&((unsigned char*)tr->target.c_str())[0], &((unsigned char*)tr->target.c_str())[tr->target.size()], back_inserter(msg));
+	cp(msg, tr->amount.integral, 4, false);
+	cp(msg, tr->amount.fraction, 8, false);
+	cp(msg, tr->fee.commission, 2, false);
+	msg.push_back(1);
+	msg.push_back(1);
 
-	//std::vector<byte> msg;
-	//cp(msg, tr->id, 6);
-	//copy(&((unsigned char*)tr->source.c_str())[0], &((unsigned char*)tr->source.c_str())[tr->source.size()], back_inserter(msg));
-	//copy(&((unsigned char*)tr->target.c_str())[0], &((unsigned char*)tr->target.c_str())[tr->target.size()], back_inserter(msg));
-	//cp(msg, tr->amount.integral, 4);
-	//cp(msg, tr->amount.fraction, 8);
-	//cp(msg, tr->fee.commission, 2);
-	//msg.push_back(1);
-	//msg.push_back(0);
+	std::vector<byte> uf{ 11, 0, 1, 0, 0, 0, 0, 15, 0, 2, 12, 0, 0, 0, 0, 15, 0, 3, 11, 0, 0, 0, 0, 2, 0, 4, 0, 12, 0, 5, 11, 0, 1 };
+	int32_t x = (int32_t)code.size();
+	cp(uf, x, 6, true);
+
+	copy(&((unsigned char*)code.c_str())[0], &((unsigned char*)code.c_str())[code.size()], back_inserter(uf));
+
+	uf.push_back(15);
+	uf.push_back(0);
+	uf.push_back(2);
+	uf.push_back(12);
+
+	x = (int32_t)sccr.byteCodeObjects.size();
+	cp(uf, x, 6, true);
+
+
 
 	//unsigned char signature[SIGNATURE_LEN];
 	//unsigned long long signatureLen;
@@ -219,12 +233,12 @@ std::unique_ptr<api::Transaction> client::make_transaction(int32_t integral, int
 
 	std::vector<byte> msg;
 
-	cp(msg, tr->id, 6);
+	cp(msg, tr->id, 6, false);
 	copy(&((unsigned char*)tr->source.c_str())[0], &((unsigned char*)tr->source.c_str())[tr->source.size()], back_inserter(msg));
 	copy(&((unsigned char*)tr->target.c_str())[0], &((unsigned char*)tr->target.c_str())[tr->target.size()], back_inserter(msg));
-	cp(msg, tr->amount.integral, 4);
-	cp(msg, tr->amount.fraction, 8);
-	cp(msg, tr->fee.commission, 2);
+	cp(msg, tr->amount.integral, 4, false);
+	cp(msg, tr->amount.fraction, 8, false);
+	cp(msg, tr->fee.commission, 2, false);
 	msg.push_back(1);
 	msg.push_back(0);
 

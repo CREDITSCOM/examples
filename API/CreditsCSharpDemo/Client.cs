@@ -38,24 +38,24 @@ namespace CreditsCSAPIDemo
             return api.WalletBalanceGet(keys.PublicKeyBytes);
         }
 
-        public TransactionFlowResult ExecuteTransaction()
+        public TransactionFlowResult TransferCoins(int integral, long fraction, double fee)
         {
-            return api.TransactionFlow(CreateTransaction());
+            return api.TransactionFlow(CreateTransaction(integral, fraction, fee));
         }
 
-        public TransactionFlowResult ExecuteTransactionWithSmartContract(string smCode)
+        public TransactionFlowResult DeploySmartContract(string smCode)
         {
             return api.TransactionFlow(CreateTransactionWithSmartContract(smCode));
         }
 
-        private Transaction CreateTransaction()
+        private Transaction CreateTransaction(int integral, long fraction, double fee)
         {
             var transaction = new Transaction();
             transaction.Id = api.WalletTransactionsCountGet(keys.PublicKeyBytes).LastTransactionInnerId + 1;
             transaction.Source = keys.PublicKeyBytes;
             transaction.Target = keys.PublicKeyBytes;
-            transaction.Amount = new Amount(1, 0);
-            transaction.Fee = new AmountCommission(Fee(0.9));
+            transaction.Amount = new Amount(integral, fraction);
+            transaction.Fee = new AmountCommission(Fee(fee));
             transaction.Currency = 1;
 
             var bytes = new byte[86];

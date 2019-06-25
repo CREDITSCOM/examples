@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
 	auto c = make_unique<client>(argv[1], atoi(argv[2]));
 	c->set_keys(argv[3], argv[4], argv[5]);
 
-	c->wallet_balance_get();
-	c->transfer_coins(1, 0, 0.9);
-	//c->deploy_smart("", 1);
+	//c->wallet_balance_get();
+	//c->transfer_coins(1, 0, 0.9);
+	c->deploy_smart("", 1);
 }
 

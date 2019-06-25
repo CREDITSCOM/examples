@@ -31,7 +31,7 @@ private:
 	std::unique_ptr<api::Transaction> make_transaction_with_smart_contract(std::string code, double fee_value);
 	std::unique_ptr<api::Transaction> make_transaction(int32_t integral, int32_t fraction, double fee_value);
 	template<class T>
-	void cp(std::vector<byte>& arr, T& value, int16_t size);
+	void cp(std::vector<byte>& arr, T& value, int16_t size, bool reverse);
 
 public:
 	client(std::string ip, int port);

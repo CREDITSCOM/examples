@@ -1,5 +1,5 @@
 call env\Scripts\activate.bat
-python app.py
+python
 call env\Scripts\deactivate.bat
 
 pause

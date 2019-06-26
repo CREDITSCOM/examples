@@ -97,14 +97,10 @@ namespace CreditsCSAPIDemo
             transaction.Currency = 1;
 
             var tarr = new byte[6];
-
             List<byte> target = new List<byte>(transaction.Source);
-
             Array.Copy(BitConverter.GetBytes(transaction.Id), 0, tarr, 0, 6);
             target.AddRange(tarr);
-
             var byteCode = api.SmartContractCompile(smCode);
-
             if (byteCode.Status.Code == 0)
             {
                 for (int i = 0; i < byteCode.ByteCodeObjects.Count; i++)

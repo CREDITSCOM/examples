@@ -17,15 +17,17 @@
     <script>
         function run()
        {
-            var pubkey = "your public key";
-            var prvkey = "your private key";
-            var trgKey = "your target key";
+            var pubkey = "code";
+            var prvkey = "code";
+            var trgKey = "code";
             var url = "http://127.0.0.1:8081";
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
 
+            console.log(client.walletGetBalance());
+
             //client.createTransactionWithSmartContract(0.9, '');
-            client.executeTransactinWithSmartContract(1, '')
+            //client.executeTransactinWithSmartContract(1, '')
 
             // var tranFlow = client.executeTransactin(1, 0.9);
             // if(tranFlow === null) {

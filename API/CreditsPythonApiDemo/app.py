@@ -12,15 +12,22 @@ def main():
 
     keys = Keys(sys.argv[2], sys.argv[3], sys.argv[4])
 
-    try:
-        client = ClientEx(sys.argv[1].split(':'))
-        print(client.wallet_balance_get(keys.public_key_bytes))
-        client.execute_transaction(keys)
-        client.close()
+    # try:
+    #     client = ClientEx(sys.argv[1].split(':'))
+    #     print(client.wallet_balance_get(keys.public_key_bytes))
+    #     client.execute_transaction(keys)
+    #     client.close()
+    #
+    # except:
+    #     print("Oops. Unexpected error.")
 
-    except:
-        print("Oops. Unexpected error.")
+    client = ClientEx(sys.argv[1].split(':'))
+    #print(client.wallet_balance_get(keys.public_key_bytes))
+    #client.transfer_coins(1, 0, 0.9, keys)
 
+    client.deploy_smart_contract('', 0.9, keys)
+
+    client.close()
 
 if __name__ == '__main__':
     main()

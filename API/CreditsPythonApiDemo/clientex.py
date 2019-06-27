@@ -83,7 +83,7 @@ class ClientEx:
         return tr
 
     def deploy_smart_contract(self, code, fee, keys):
-        res = self.create_transaction_with_smart_contract(code, fee, keys)
+        res = self.client.TransactionFlow(self.create_transaction_with_smart_contract(code, fee, keys))
         print(res)
 
     def create_transaction_with_smart_contract(self, code, fee, keys):
@@ -123,7 +123,7 @@ class ClientEx:
                 target = target + bco.byteCode
         else:
             print(byte_code.Status.Message)
-            return None
+            return 'compile error'
 
         tr.smartContract = SmartContractInvocation()
         tr.smartContract.smartContractDeploy = SmartContractDeploy()

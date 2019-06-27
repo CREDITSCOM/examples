@@ -91,7 +91,7 @@ namespace CreditsCSAPIDemo
             var transaction = new Transaction();
             transaction.Id = api.WalletTransactionsCountGet(keys.PublicKeyBytes).LastTransactionInnerId + 1;
             transaction.Source = keys.PublicKeyBytes;
-            transaction.Target = keys.PublicKeyBytes;
+            //transaction.Target = keys.PublicKeyBytes;
             transaction.Amount = new Amount(0, 0);
             transaction.Fee = new AmountCommission(Fee(1.0));
             transaction.Currency = 1;

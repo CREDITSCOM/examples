@@ -122,9 +122,9 @@ void client::cp(std::vector<byte>& arr, T& value, int16_t size, bool reverse)
 {
 	auto temp = std::make_unique<byte[]>(size);
 	memcpy(&temp[0], &value, size);
-	std::copy(&temp[0], &temp[size], back_inserter(arr));
 	if(reverse)
-		std::reverse(arr.begin(), arr.end());
+		std::reverse(&temp[0], &temp[size]);
+	std::copy(&temp[0], &temp[size], back_inserter(arr));
 }
 
 std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(std::string code, double fee_value)
@@ -140,7 +140,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 
 	tr->id = wtcgr.lastTransactionInnerId + 1;
 	tr->source = std::string{ m_keys->PublicKeyAddress() };
-	tr->target = std::string{ m_keys->TargetPublicKeyAddress() };
+	//tr->target = std::string{ m_keys->TargetPublicKeyAddress() };
 	tr->amount.integral = 0;
 	tr->amount.fraction = 0;
 	tr->fee.commission = fee(fee_value);
@@ -172,7 +172,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 	tr->smartContract.forgetNewState = false;
 
 	byte hash[32];
-	blake2s(hash, BLAKE2S_OUTBYTES, target.data(), target.size(), m_keys->PublicKeyAddress().c_str(), 32);
+	blake2s(hash, BLAKE2S_OUTBYTES, target.data(), target.size(), nullptr, 0);
 	std::copy(&hash[0], &hash[32], back_inserter(tr->target));
 
 	std::vector<byte> msg;
@@ -188,7 +188,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 
 	std::vector<byte> uf{ 11, 0, 1, 0, 0, 0, 0, 15, 0, 2, 12, 0, 0, 0, 0, 15, 0, 3, 11, 0, 0, 0, 0, 2, 0, 4, 0, 12, 0, 5, 11, 0, 1 };
 	int32_t x = (int32_t)code.size();
-	cp(uf, x, 6, true);
+	cp(uf, x, 4, true);
 
 	copy(&((unsigned char*)code.c_str())[0], &((unsigned char*)code.c_str())[code.size()], back_inserter(uf));
 
@@ -198,19 +198,50 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 	uf.push_back(12);
 
 	x = (int32_t)sccr.byteCodeObjects.size();
-	cp(uf, x, 6, true);
+	cp(uf, x, 4, true);
 
+	for (size_t i = 0; i < sccr.byteCodeObjects.size(); i++)
+	{
+		uf.insert(uf.end(), { 11, 0, 1 });
 
+		x = (int32_t)sccr.byteCodeObjects[i].name.size();
+		cp(uf, x, 4, true);
+		copy(&((unsigned char*)sccr.byteCodeObjects[i].name.c_str())[0],
+			&((unsigned char*)sccr.byteCodeObjects[i].name.c_str())[sccr.byteCodeObjects[i].name.size()],
+			back_inserter(uf));
 
-	//unsigned char signature[SIGNATURE_LEN];
-	//unsigned long long signatureLen;
-	//crypto_sign_detached(signature, &signatureLen, msg.data(), msg.size(), (unsigned char*)m_keys->PrivateKeyAddress().c_str());
+		uf.insert(uf.end(), { 11, 0, 2 });
 
-	//if (crypto_sign_verify_detached(signature, msg.data(), msg.size(), (unsigned char*)tr->source.c_str()) != 0) {
-	//	throw std::exception("Incorrect signature!");
-	//}
+		x = (int32_t)sccr.byteCodeObjects[i].byteCode.size();
+		cp(uf, x, 4, true);
 
-	//tr->signature = std::string{ reinterpret_cast<char*>(signature), SIGNATURE_LEN };
+		copy(&sccr.byteCodeObjects[i].byteCode[0], 
+			 &sccr.byteCodeObjects[i].byteCode[sccr.byteCodeObjects[i].byteCode.size()], back_inserter(uf));
+
+		ByteCodeObject nbco;
+		nbco.name = sccr.byteCodeObjects[i].name;
+		nbco.byteCode = sccr.byteCodeObjects[i].byteCode;
+		tr->smartContract.smartContractDeploy.byteCodeObjects.push_back(nbco);
+		uf.push_back(0);
+	}
+	   
+	uf.insert(uf.end(), { 11, 0, 3, 0, 0, 0, 0, 8, 0, 4, 0, 0, 0, 0, 0 });
+	uf.push_back(0);
+
+	x = (int32_t)uf.size();
+	cp(msg, x, 4, false);
+
+	copy(uf.begin(), uf.end(), back_inserter(msg));
+
+	unsigned char signature[SIGNATURE_LEN];
+	unsigned long long signatureLen;
+	crypto_sign_detached(signature, &signatureLen, msg.data(), msg.size(), (unsigned char*)m_keys->PrivateKeyAddress().c_str());
+
+	if (crypto_sign_verify_detached(signature, msg.data(), msg.size(), (unsigned char*)tr->source.c_str()) != 0) {
+		throw std::exception("Incorrect signature!");
+	}
+
+	tr->signature = std::string( reinterpret_cast<char*>(signature), SIGNATURE_LEN );
 
 	return std::move(tr);
 }

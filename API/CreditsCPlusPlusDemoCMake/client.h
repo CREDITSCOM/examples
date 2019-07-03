@@ -4,6 +4,7 @@
 #include <sodium.h>
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 #include <thrift/stdcxx.h>
 #include <thrift/transport/TSocket.h>

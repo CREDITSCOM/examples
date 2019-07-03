@@ -24,7 +24,7 @@ def main():
     client = ClientEx(sys.argv[1].split(':'))
     print(client.wallet_balance_get(keys.public_key_bytes))
     client.transfer_coins(1, 0, 0.9, keys)
-    client.deploy_smart_contract('', 0.9, keys)
+    #client.deploy_smart_contract('', 0.9, keys)
 
     client.close()
 

@@ -34,9 +34,10 @@ void client::wallet_balance_get()
 		m_api->WalletBalanceGet(bg_res, m_keys->PublicKeyAddress());
 		bg_res.printTo(std::cout);
 	}
-	catch (const std::exception&)
+	catch (const std::exception& ex)
 	{
-		throw std::exception("wallet_balance_get: calling error");
+		//throw std::exception("wallet_balance_get: calling error");
+		std::cout << ex.what() << std::endl;
 	}
 }
 
@@ -61,6 +62,7 @@ void client::deploy_smart(std::string code, double fee_value)
 	{
 		auto tr = make_transaction_with_smart_contract(code, fee_value);
 		TransactionFlowResult tfr;
+
 		m_api->TransactionFlow(tfr, *tr);
 		tfr.printTo(std::cout);
 	}
@@ -134,22 +136,25 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 
 	auto tr = std::make_unique<api::Transaction>();
 
+	// set true for transfering optional parameters
+	tr->__isset.smartContract = true;
+	tr->smartContract.__isset.smartContractDeploy = true;
+
 	WalletTransactionsCountGetResult wtcgr;
 	auto& pka = m_keys->PublicKeyAddress();
 	m_api->WalletTransactionsCountGet(wtcgr, pka);
 
 	tr->id = wtcgr.lastTransactionInnerId + 1;
 	tr->source = std::string{ m_keys->PublicKeyAddress() };
-	//tr->target = std::string{ m_keys->TargetPublicKeyAddress() };
 	tr->amount.integral = 0;
 	tr->amount.fraction = 0;
 	tr->fee.commission = fee(fee_value);
 	tr->currency = 1;
-	
+
 	std::vector<byte> target;
-	copy(&((unsigned char*)tr->source.c_str())[0], 
-		 &((unsigned char*)tr->source.c_str())[tr->source.size()], 
-		 back_inserter(target));
+	copy(&((unsigned char*)tr->source.c_str())[0],
+		&((unsigned char*)tr->source.c_str())[tr->source.size()],
+		back_inserter(target));
 	cp(target, tr->id, 6, false);
 
 	SmartContractCompileResult sccr;
@@ -158,9 +163,9 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 	{
 		for (int i = 0; i < sccr.byteCodeObjects.size(); i++)
 		{
-			copy(&((unsigned char*)sccr.byteCodeObjects[i].byteCode.c_str())[0], 
-				 &((unsigned char*)sccr.byteCodeObjects[i].byteCode.c_str())[sccr.byteCodeObjects[i].byteCode.size()], 
-				 back_inserter(target));
+			copy(&((unsigned char*)sccr.byteCodeObjects[i].byteCode.c_str())[0],
+				&((unsigned char*)sccr.byteCodeObjects[i].byteCode.c_str())[sccr.byteCodeObjects[i].byteCode.size()],
+				back_inserter(target));
 		}
 	}
 	else
@@ -177,7 +182,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 
 	std::vector<byte> msg;
 	cp(msg, tr->id, 6, false);
-	
+
 	copy(&((unsigned char*)tr->source.c_str())[0], &((unsigned char*)tr->source.c_str())[tr->source.size()], back_inserter(msg));
 	copy(&((unsigned char*)tr->target.c_str())[0], &((unsigned char*)tr->target.c_str())[tr->target.size()], back_inserter(msg));
 	cp(msg, tr->amount.integral, 4, false);
@@ -192,10 +197,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 
 	copy(&((unsigned char*)code.c_str())[0], &((unsigned char*)code.c_str())[code.size()], back_inserter(uf));
 
-	uf.push_back(15);
-	uf.push_back(0);
-	uf.push_back(2);
-	uf.push_back(12);
+	uf.insert(uf.end(), { 15, 0, 2, 12 });
 
 	x = (int32_t)sccr.byteCodeObjects.size();
 	cp(uf, x, 4, true);
@@ -215,8 +217,8 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 		x = (int32_t)sccr.byteCodeObjects[i].byteCode.size();
 		cp(uf, x, 4, true);
 
-		copy(&sccr.byteCodeObjects[i].byteCode[0], 
-			 &sccr.byteCodeObjects[i].byteCode[sccr.byteCodeObjects[i].byteCode.size()], back_inserter(uf));
+		copy(&sccr.byteCodeObjects[i].byteCode[0],
+			&sccr.byteCodeObjects[i].byteCode[sccr.byteCodeObjects[i].byteCode.size()], back_inserter(uf));
 
 		ByteCodeObject nbco;
 		nbco.name = sccr.byteCodeObjects[i].name;
@@ -224,7 +226,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 		tr->smartContract.smartContractDeploy.byteCodeObjects.push_back(nbco);
 		uf.push_back(0);
 	}
-	   
+
 	uf.insert(uf.end(), { 11, 0, 3, 0, 0, 0, 0, 8, 0, 4, 0, 0, 0, 0, 0 });
 	uf.push_back(0);
 
@@ -241,7 +243,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 		throw std::exception("Incorrect signature!");
 	}
 
-	tr->signature = std::string( reinterpret_cast<char*>(signature), SIGNATURE_LEN );
+	tr->signature = std::string(reinterpret_cast<char*>(signature), SIGNATURE_LEN);
 
 	return std::move(tr);
 }

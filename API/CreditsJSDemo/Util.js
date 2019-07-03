@@ -17,7 +17,7 @@ class CreditsUtils {
         var protocol = new Thrift.Protocol(transport);
         return new APIClient(protocol);
     }
-
+}
     walletGetBalance() {
         var balance = this.client().WalletBalanceGet(this.publicKeyByte).balance;
         return balance;
@@ -49,6 +49,135 @@ class CreditsUtils {
         var tranFlow = this.client().TransactionFlow(tran);
         console.log(tranFlow);
         return tranFlow;
+    }
+
+    createTransactionWithExecMethodOfSmartContract(feeValue, smMethod, smParam) {
+
+        if(smCode == '')
+            return null; 
+
+        var tran = new Transaction();
+
+        let res = this.client().WalletTransactionsCountGet(this.publicKeyByte);
+        if (res.status.code === 0) {
+            tran.id = res.lastTransactionInnerId + 1;
+        }
+        else {
+            return null;
+        }
+
+        tran.source = this.publicKeyByte;
+        tran.target = this.targetKeyByte;
+        tran.amount = new Amount({integral: 0, fraction: 0});
+
+        let F = this.fee(feeValue);
+        let FE = this.numbToBits(F.exp);
+        while (FE.length < 5){
+            FE = "0" + FE;
+        }
+        let FM = this.numbToBits(F.man);
+        while (FM.length < 10) {
+            FM = "0" + FM;
+        }
+
+        tran.fee = new AmountCommission({
+            commission: this.bitsToNumb("0" + FE + FM)
+        });
+
+        tran.currency = 1;
+
+        let target = tran.source;
+        target = this.concatTypedArrays(target, this.numbToByte(tran.id, 6));
+        let byteCode = this.client().SmartContractCompile(smCode);
+        if (byteCode.status.code === 0) {
+            for (let i in byteCode.byteCodeObjects) {
+                target = this.concatTypedArrays(target, this.convertCharToByte(byteCode.byteCodeObjects[i].byteCode));
+            }
+        }
+        else {
+            //ResObj.Message = ByteCode.status.message;
+            //return ResObj;
+            return byteCode.status.message;
+        }
+
+        tran.target = this.blake2s(target);
+
+        let PerStr = this.numbToByte(tran.id, 6);
+        PerStr = this.concatTypedArrays(PerStr, tran.source);
+        PerStr = this.concatTypedArrays(PerStr, tran.target);
+        PerStr = this.concatTypedArrays(PerStr, this.numbToByte(tran.amount.integral, 4));
+        PerStr = this.concatTypedArrays(PerStr, this.numbToByte(tran.amount.fraction, 8));
+        PerStr = this.concatTypedArrays(PerStr, this.numbToByte(tran.fee.commission, 2));
+        PerStr = this.concatTypedArrays(PerStr, new Uint8Array([1]));
+        PerStr = this.concatTypedArrays(PerStr, new Uint8Array([1]));
+
+        let UserField = new Uint8Array();
+        tran.smartContract = new SmartContractInvocation();
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 1]));
+        
+        
+        tran.smartContract.method = smMethod;
+        UserField = this.concatTypedArrays(UserField, this.numbToByte(smMethod.length, 4).reverse());
+        UserField = this.concatTypedArrays(UserField, this.convertCharToByte(smMethod));
+
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([15, 0, 2, 12]));
+        
+        if (Obj.SmartContract.Params === undefined) {
+            UserField = concatTypedArrays(UserField, new Uint8Array(4));
+        }
+        else { 
+            tran.smartContract.params = [];
+            UserField = this.concatTypedArrays(UserField, numbToByte(smParams.length, 4).reverse());
+            for (let i in smParams) {
+                let val = smParams[i];
+
+                switch (val.K)
+                {
+                    case "STRING":
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array([11, 0, 17]));
+                        UserField = this.concatTypedArrays(UserField, this.numbToByte(val.V.length, 4).reverse());
+                        UserField = this.concatTypedArrays(UserField, this.convertCharToByte(val.V));
+                        tran.smartContract.params.push(new Variant({ v_string: val.V }));
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+                        break;
+                    case "INT":
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array([8, 0, 9]));
+                        UserField = this.concatTypedArrays(UserField, this.numbToByte(val.V, 4).reverse());
+                        tran.smartContract.params.push(new Variant({ v_int: val.V }));
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+                        break;
+                    case "BOOL":
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array([2, 0, 3]));
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+                        if (val.V) {
+                            UserField[UserField.length - 1] = 1;
+                        }
+                        tran.smartContract.params.push(new Variant({ v_boolean: val.V }));
+                        UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+                        break;
+                }
+            }
+        }
+
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([15, 0, 3, 11, 0, 0, 0, 0]));
+
+        tran.smartContract.forgetNewState = false;
+        UserField = this.concatTypedArrays(UserField, new Uint8Array([2, 0, 4, 0]));
+
+        UserField = this.concatTypedArrays(UserField, new Uint8Array(1));
+        PerStr = this.concatTypedArrays(PerStr, this.numbToByte(UserField.length, 4));
+        PerStr = this.concatTypedArrays(PerStr, UserField);
+
+        var ArHex = "0123456789ABCDEF";
+        var Hex = "";
+        for (let j = 0; j < PerStr.length; j++) {
+            Hex += ArHex[Math.floor(PerStr[j] / 16)];
+            Hex += ArHex[Math.floor(PerStr[j] % 16)];
+        }
+        console.log(Hex);
+
+        tran.signature = nacl.sign.detached(PerStr, this.privateKeyByte);
+        return tran;
     }
 
     createTransactionWithSmartContract(feeValue, smCode) {

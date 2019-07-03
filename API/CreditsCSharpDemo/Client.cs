@@ -174,6 +174,12 @@ namespace CreditsCSAPIDemo
             var verifyResult = Ed25519.Verify(signature, bytes.ToArray(), keys.PublicKeyBytes);
             if (!verifyResult) throw new Exception("Signature could not be verified");
 
+            foreach (var i in signature)
+            {
+                Console.Write(i);
+                Console.Write(" ");
+            }
+
             transaction.Signature = signature;
             return transaction;
         }

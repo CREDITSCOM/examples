@@ -16,31 +16,28 @@
     <title>CREDITS API JS Demo</title>
     <script>
         function run()
-       {
-            var pubkey = "35SR5JC6DA9pPd9xYQ7oRvvCgJKK7teLoMwDMBmEN45Q";
-            var prvkey = "tvkphPU2Y6svC38FaWuer8zF2F7DsfNkqMsko76uL8Rdv5oztCqmcEwKWi5NbDgtsy7QDNe9vXhkHFQTATNFksc";
-            var trgKey = "DXEiDtU7NHz8YdQEzugBXh3oqaVQ6nGHMkFPwLtnvZSG";
+        {
+            var pubkey = "your public address";
+            var prvkey = "your private address";
+            var trgKey = "your target address";
             var url = "http://127.0.0.1:8081";
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
 
-            console.log(client.walletGetBalance());
+            var tranFlow = client.transferCoins(1, 0.9);
+            if(tranFlow === null) {
+                document.getElementById('tr-st-id').innerText = "Error of creating a transaction";
+            }
+            else {
+                document.getElementById('tr-st-id').innerText = tranFlow.status.message;
+            }
 
             //client.createTransactionWithSmartContract(0.9, '');
-            //client.executeTransactinWithSmartContract(1, '')
 
-            // var tranFlow = client.executeTransactin(1, 0.9);
-            // if(tranFlow === null) {
-            //     document.getElementById('tr-st-id').innerText = "Error of creating a transaction";
-            // }
-            // else {
-            //     document.getElementById('tr-st-id').innerText = tranFlow.status.message;
-            // }
-
-            // var obj = client.walletGetBalance();
-            // console.log(obj);
-            // document.getElementById('pc-id').innerText = client.publicKey;
-            // document.getElementById('bl-id').innerText = 'Integral: ' + obj.integral + ', Fraction: ' + obj.fraction;
+            var obj = client.walletGetBalance();
+            console.log(obj);
+            document.getElementById('pc-id').innerText = client.publicKey;
+            document.getElementById('bl-id').innerText = 'Integral: ' + obj.integral + ', Fraction: ' + obj.fraction;
         }
         function ready() {
             run();

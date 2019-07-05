@@ -17,7 +17,7 @@ class CreditsUtils {
         var protocol = new Thrift.Protocol(transport);
         return new APIClient(protocol);
     }
-}
+
     walletGetBalance() {
         var balance = this.client().WalletBalanceGet(this.publicKeyByte).balance;
         return balance;
@@ -31,15 +31,15 @@ class CreditsUtils {
         return this.privateKey;
     }
 
-    executeTransactin(amountVal, feeValue) {
-        var tran = this.createTransaction(amountVal, feeValue);
-        if(tran === null)
-            return null;
-            
-        var tranFlow = this.client().TransactionFlow(tran);
-        console.log(tranFlow);
-        return tranFlow;
-    }
+transferCoins(amountVal, feeValue) {
+    var tran = this.createTransaction(amountVal, feeValue);
+    if(tran === null)
+        return null;
+        
+    var tranFlow = this.client().TransactionFlow(tran);
+    console.log(tranFlow);
+    return tranFlow;
+}
 
     executeTransactinWithSmartContract(feeValue, smCode) {
         var tran = this.createTransactionWithSmartContract(feeValue, smCode);

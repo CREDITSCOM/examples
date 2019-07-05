@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="apache-thrift-netcore" Version="0.9.3.2" />
+    <PackageReference Include="Chaos.NaCl.Core" Version="1.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="SauceControl.Blake2Fast" Version="0.2.0" />
+    <PackageReference Include="SimpleBase" Version="1.8.0" />
+  </ItemGroup>
+
+</Project>

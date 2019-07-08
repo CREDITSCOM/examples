@@ -28,10 +28,10 @@ namespace CreditsCSAPIDemo
                 //var balance = client.WalletGetBalance();
                 //Console.WriteLine($"[{client.keys.PublicKey}] Balance: {balance.Balance.ToString()}");
 
-                //Console.WriteLine("Result of the transfer coins:");
-                //Console.WriteLine(client.TransferCoins(1, 0, 0.9));
+                Console.WriteLine("Result of the transfer coins:");
+                Console.WriteLine(client.TransferCoins(1, 0, 2.0));
                 
-                Console.WriteLine(client.DeploySmartContract(""));
+                //Console.WriteLine(client.DeploySmartContract(""));
             }
 
             Console.WriteLine("Press [Enter] to exit...");

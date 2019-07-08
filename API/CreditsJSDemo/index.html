@@ -17,9 +17,9 @@
     <script>
         function run()
         {
-            var pubkey = "your public address";
-            var prvkey = "your private address";
-            var trgKey = "your target address";
+            var pubkey = "";
+            var prvkey = "";
+            var trgKey = "";
             var url = "http://127.0.0.1:8081";
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
@@ -32,7 +32,7 @@
                 document.getElementById('tr-st-id').innerText = tranFlow.status.message;
             }
 
-            //client.createTransactionWithSmartContract(0.9, '');
+            client.createTransactionWithSmartContract(0.9, '');
 
             var obj = client.walletGetBalance();
             console.log(obj);

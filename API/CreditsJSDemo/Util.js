@@ -31,17 +31,17 @@ class CreditsUtils {
         return this.privateKey;
     }
 
-transferCoins(amountVal, feeValue) {
-    var tran = this.createTransaction(amountVal, feeValue);
-    if(tran === null)
-        return null;
-        
-    var tranFlow = this.client().TransactionFlow(tran);
-    console.log(tranFlow);
-    return tranFlow;
-}
+    transferCoins(amountVal, feeValue) {
+        var tran = this.createTransaction(amountVal, feeValue);
+        if(tran === null)
+            return null;
+            
+        var tranFlow = this.client().TransactionFlow(tran);
+        console.log(tranFlow);
+        return tranFlow;
+    }
 
-    executeTransactinWithSmartContract(feeValue, smCode) {
+    deploySmartContract(feeValue, smCode) {
         var tran = this.createTransactionWithSmartContract(feeValue, smCode);
         if(tran === null)
             return null;

@@ -30,7 +30,7 @@ private:
 	void disconnect();
 	short fee(double value);
 	std::unique_ptr<api::Transaction> make_transaction_with_smart_contract(std::string code, double fee_value);
-	std::unique_ptr<api::Transaction> make_transaction(int32_t integral, int32_t fraction, double fee_value);
+	std::unique_ptr<api::Transaction> make_transaction(int32_t integral, int64_t fraction, double fee_value);
 	template<class T>
 	void cp(std::vector<byte>& arr, T& value, int16_t size, bool reverse);
 
@@ -40,8 +40,8 @@ public:
 
 	void set_keys(const std::string& publicKey, const std::string& privateKey, const std::string& targetKey);
 
-	void wallet_balance_get();
-	void transfer_coins(int32_t integral, int32_t fraction, double fee_value);
+	std::unique_ptr<api::WalletBalanceGetResult> wallet_balance_get();
+	void transfer_coins(int32_t integral, int64_t fraction, double fee_value);
 	void deploy_smart(std::string code, double fee_value);
 };
 

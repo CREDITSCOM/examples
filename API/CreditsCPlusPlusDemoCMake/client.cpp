@@ -34,10 +34,9 @@ void client::wallet_balance_get()
 		m_api->WalletBalanceGet(bg_res, m_keys->PublicKeyAddress());
 		bg_res.printTo(std::cout);
 	}
-	catch (const std::exception& ex)
+	catch (const std::exception&)
 	{
-		//throw std::exception("wallet_balance_get: calling error");
-		std::cout << ex.what() << std::endl;
+		throw;
 	}
 }
 

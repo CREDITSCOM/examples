@@ -26,22 +26,26 @@ void client::set_keys(const std::string& publicKey, const std::string& privateKe
 	m_keys = std::make_unique<keys>(publicKey.c_str(), privateKey.c_str(), targetKey.c_str());
 }
 
-void client::wallet_balance_get()
+std::unique_ptr<api::WalletBalanceGetResult> client::wallet_balance_get()
 {
 	try
 	{
 		WalletBalanceGetResult bg_res;
 		m_api->WalletBalanceGet(bg_res, m_keys->PublicKeyAddress());
 		bg_res.printTo(std::cout);
+		return std::make_unique<WalletBalanceGetResult>(bg_res);
 	}
-	catch (const std::exception& ex)
+	catch (apache::thrift::TApplicationException& th)
 	{
-		//throw std::exception("wallet_balance_get: calling error");
-		std::cout << ex.what() << std::endl;
+		throw std::exception(th.what());
+	}
+	catch (const std::exception&)
+	{
+		throw std::exception("error of calling wallet_balance_get");
 	}
 }
 
-void client::transfer_coins(int32_t integral, int32_t fraction, double fee_value)
+void client::transfer_coins(int32_t integral, int64_t fraction, double fee_value)
 {
 	try
 	{
@@ -50,7 +54,11 @@ void client::transfer_coins(int32_t integral, int32_t fraction, double fee_value
 		m_api->TransactionFlow(tfr, *tr);
 		tfr.printTo(std::cout);
 	}
-	catch (const std::exception ex)
+	catch (apache::thrift::TApplicationException& th)
+	{
+		throw std::exception(th.what());
+	}
+	catch (const std::exception& ex)
 	{
 		throw std::exception(ex.what());
 	}
@@ -66,7 +74,11 @@ void client::deploy_smart(std::string code, double fee_value)
 		m_api->TransactionFlow(tfr, *tr);
 		tfr.printTo(std::cout);
 	}
-	catch (const std::exception ex)
+	catch (apache::thrift::TApplicationException& th)
+	{
+		throw std::exception(th.what());
+	}
+	catch (const std::exception& ex)
 	{
 		throw std::exception(ex.what());
 	}
@@ -78,9 +90,9 @@ void client::connect()
 	{
 		m_transport->open();
 	}
-	catch (...)
+	catch (const std::exception& ex)
 	{
-		throw std::exception("thrift error: failed connect to node");
+		throw std::exception(ex.what());
 	}
 }
 
@@ -90,9 +102,9 @@ void client::disconnect()
 	{
 		m_transport->close();
 	}
-	catch (...)
+	catch (const std::exception& ex)
 	{
-		throw std::exception("thrift error: failed disconnect from node");
+		throw std::exception(ex.what());
 	}
 }
 
@@ -248,7 +260,7 @@ std::unique_ptr<api::Transaction> client::make_transaction_with_smart_contract(s
 	return std::move(tr);
 }
 
-std::unique_ptr<api::Transaction> client::make_transaction(int32_t integral, int32_t fraction, double fee_value)
+std::unique_ptr<api::Transaction> client::make_transaction(int32_t integral, int64_t fraction, double fee_value)
 {
 	auto tr = std::make_unique<api::Transaction>();
 

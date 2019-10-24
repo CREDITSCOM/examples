@@ -36,6 +36,7 @@
 
             var obj = client.walletGetBalance();
             console.log(obj);
+            console.log(obj);
             document.getElementById('pc-id').innerText = client.publicKey;
             document.getElementById('bl-id').innerText = 'Integral: ' + obj.integral + ', Fraction: ' + obj.fraction;
         }

@@ -17,12 +17,14 @@
     <script>
         function run()
         {
-            var pubkey = "";
-            var prvkey = "";
+            var pubkey = "5B3YXqDTcWQFGAqEJQJP3Bg1ZK8FFtHtgCiFLT5VAxpe";
+            var prvkey = "3rUevsW5xfob6qDxWMDFwwTQCq39SYhzstuyfUGSDvF2QHBRyPD8fSk49wFXaPk3GztfxtuU85QHfMV3ozfqa7rN";
             var trgKey = "";
-            var url = "http://127.0.0.1:8081";
+            var url = "http://165.22.250.42:8081";
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
+
+            client.transactionGet(4894283.1);
 
             var tranFlow = client.transferCoins(1, 0.9);
             if(tranFlow === null) {

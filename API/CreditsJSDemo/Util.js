@@ -23,6 +23,11 @@ class CreditsUtils {
         return balance;
     }
 
+    transactionGet(transactionId) {
+        var result = this.client().TransactionGet(transactionId);
+        console.log(result);
+    }
+
     publicKey() {
         return this.publicKey;
     }

@@ -26,6 +26,15 @@ void client::set_keys(const std::string& publicKey, const std::string& privateKe
 	m_keys = std::make_unique<keys>(publicKey.c_str(), privateKey.c_str(), targetKey.c_str());
 }
 
+void client::get_transaction()
+{
+	TransactionGetResult trgr;
+	TransactionId trid;
+	
+
+	m_api->TransactionGet()
+}
+
 void client::wallet_balance_get()
 {
 	try

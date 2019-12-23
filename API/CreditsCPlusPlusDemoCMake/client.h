@@ -34,6 +34,8 @@ private:
 	template<class T>
 	void cp(std::vector<byte>& arr, T& value, int16_t size, bool reverse);
 
+	void get_transaction();
+
 public:
 	client(std::string ip, int port);
 	~client();

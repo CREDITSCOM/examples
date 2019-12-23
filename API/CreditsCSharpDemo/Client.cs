@@ -33,6 +33,16 @@ namespace CreditsCSAPIDemo
             transport.Close();
         }
 
+        public void TransactionGet(long poolSeq, int index)
+        {
+            var tr = new TransactionId();
+            tr.PoolSeq = poolSeq;
+            tr.Index = index;
+            
+            TransactionGetResult trgr = api.TransactionGet(tr);
+
+        }
+
         public WalletBalanceGetResult WalletGetBalance()
         {
             return api.WalletBalanceGet(keys.PublicKeyBytes);

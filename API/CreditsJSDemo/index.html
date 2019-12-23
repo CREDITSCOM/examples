@@ -24,7 +24,8 @@
 
             var client = new CreditsUtils(pubkey, prvkey, trgKey, url);
 
-            client.transactionGet(4894283.1);
+            // client.transactionGet( { poolSeq: list[0], index: list[1] - 1 } ); //"4894857.109");
+            client.transactionGet( { poolSeq: 4894857, index: 109 } ); //"4894857.109");
 
             var tranFlow = client.transferCoins(1, 0.9);
             if(tranFlow === null) {

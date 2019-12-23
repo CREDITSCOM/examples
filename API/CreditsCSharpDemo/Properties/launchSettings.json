@@ -1,7 +1,8 @@
 {
   "profiles": {
     "CreditsCSAPIDemo": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "165.22.250.42 9090 5B3YXqDTcWQFGAqEJQJP3Bg1ZK8FFtHtgCiFLT5VAxpe 3rUevsW5xfob6qDxWMDFwwTQCq39SYhzstuyfUGSDvF2QHBRyPD8fSk49wFXaPk3GztfxtuU85QHfMV3ozfqa7rN H5ptdUUfjJBGiK2X3gN2EzNYxituCUUnXv2tiMdQKP3b"
     }
   }
 }

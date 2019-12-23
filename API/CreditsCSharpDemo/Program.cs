@@ -25,11 +25,11 @@ namespace CreditsCSAPIDemo
 
             using (var client = new Client(args[0], Convert.ToInt32(args[1]), args[2], args[3], args[4]))
             {
-                //var balance = client.WalletGetBalance();
-                //Console.WriteLine($"[{client.keys.PublicKey}] Balance: {balance.Balance.ToString()}");
+                var balance = client.WalletGetBalance();
+                Console.WriteLine($"[{client.keys.PublicKey}] Balance: {balance.Balance.ToString()}");
 
-                Console.WriteLine("Result of the transfer coins:");
-                Console.WriteLine(client.TransferCoins(1, 0, 2.0));
+                //Console.WriteLine("Result of the transfer coins:");
+                //Console.WriteLine(client.TransferCoins(1, 0, 2.0));
                 
                 //Console.WriteLine(client.DeploySmartContract(""));
             }

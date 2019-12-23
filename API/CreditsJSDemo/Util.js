@@ -25,6 +25,10 @@ class CreditsUtils {
 
     transactionGet(transactionId) {
         var result = this.client().TransactionGet(transactionId);
+
+        console.log(from_b58(this.convertCharToByte(result.transaction.trxn.source)));
+        console.log(from_b58(this.convertCharToByte(result.transaction.trxn.target)));
+
         console.log(result);
     }
 

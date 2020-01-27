@@ -85,9 +85,9 @@ def send_cs(api, src_priv, src_pub,  dst_pub):
                        0)                  #b - 1 byte userfield_num
     #Calculate signing
     keydata = base58check.b58decode(src_priv)
-    #Создаем объект ed25519
+    #Create ed25519 object
     signing_key = ed25519.SigningKey(keydata)
-    #Получаем цифровую подпись msg
+    #Get sign for msg
     sign = signing_key.sign(serial_transaction)
     tr.signature = sign
 

@@ -5,7 +5,7 @@ from struct import pack
 import ed25519
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 from thrift.transport.TSocket import TSocket
-
+from thrift.transport.TTransport import TMemoryBuffer
 from api.API import Client, Transaction, AmountCommission, SmartContractInvocation, SmartContractDeploy
 from general.ttypes import Amount, ByteCodeObject
 
@@ -23,6 +23,24 @@ class ClientEx:
 
     def wallet_balance_get(self, pub_key_bytes):
         return self.client.WalletBalanceGet(pub_key_bytes)
+
+    def double_to_fee(self,value):
+        fee_comission = 0
+        a = True
+        if value < 0.:
+            fee_comission += 32768
+        else:
+            fee_comission += (32768 if value < 0. else 0)
+            value = math.fabs(value)
+            expf = (0. if value == 0. else math.log10(value))
+            expi = int(expf + 0.5 if expf >= 0. else expf - 0.5)
+            value /= math.pow(10, expi)
+            if value >= 1.:
+                value *= 0.1
+                expi += 1
+            fee_comission += int(1024*(expi + 18))
+            fee_comission += int(value * 1024)
+        return fee_comission
 
     def __fee(self, value):
         sign = 0
@@ -86,85 +104,82 @@ class ClientEx:
         res = self.client.TransactionFlow(self.create_transaction_with_smart_contract(code, fee, keys))
         print(res)
 
-    def create_transaction_with_smart_contract(self, code, fee, keys):
+    def createContractAddress(self, source, tId, contract):
+        tmpBytes = bytearray()
+        tmpBytes.extend(source)
+        tmpBytes.extend(tId)
+        for a in contract.smartContractDeploy.byteCodeObjects:
+            tmpBytes.extend(a.byteCode)
+        res = hashlib.blake2s()
+        res.update(tmpBytes)
+        return res.digest()
 
+    def normalizeCode(self,javaText):
+        javaText = javaText.replace('\r', ' ').replace('\t', ' ').replace('{', ' {')
+        while '  ' in javaText:
+            javaText = javaText.replace('  ', ' ')
+        return javaText    
+
+    def compile_smart(self,contract_body):
+        if self.client == None:
+            return None
+        res = self.client.SmartContractCompile(contract_body)
+        return res
+
+    def create_transaction_with_smart_contract(self, code, fee, keys):
+        tr = Transaction()
+        contract = SmartContractInvocation()
+        contract.smartContractDeploy = SmartContractDeploy()
         if code == "":
             code = 'import com.credits.scapi.annotations.*; import com.credits.scapi.v0.*; public class ' \
                    'MySmartContract extends SmartContract { public MySmartContract() {} public String hello2(String ' \
                    'say) { return \"Hello\" + say; } }';
-
-        tr = Transaction()
-        tr.id = self.client.WalletTransactionsCountGet(keys.public_key_bytes).lastTransactionInnerId + 1
+        contractText = self.normalizeCode(code)
+        result = self.compile_smart(contractText)
+        contract.smartContractDeploy.byteCodeObjects = result.byteCodeObjects
+        tr.smartContract = contract
+        tr.smartContract.smartContractDeploy.sourceCode = contractText
         tr.source = keys.public_key_bytes
-        tr.target = keys.target_public_key_bytes
+        w = self.client.WalletTransactionsCountGet(tr.source)
+        lastInnerId = bytearray((w.lastTransactionInnerId + 1).to_bytes(6,'little'))
+        tr.id = int.from_bytes(lastInnerId,byteorder='little', signed=False)
+        tr.target = self.createContractAddress(tr.source, lastInnerId, contract)
         tr.amount = Amount()
         tr.amount.integral = 0
         tr.amount.fraction = 0
+        tr.balance = Amount()
+        tr.balance.integral = 0
+        tr.balance.fraction = 0
         tr.currency = 1
-
         tr.fee = AmountCommission()
-        tr.fee.commission = self.__fee(fee)
-
-        serial_transaction = pack('=6s32s32slqhbb',                       # '=' - without alignment'
-                                  bytearray(tr.id.to_bytes(6, 'little')), # 6s - 6 byte InnerID (char[] C Type)
-                                  tr.source,                              # 32s - 32 byte source public key (char[] C Type)
-                                  tr.target,                              # 32s - 32 byte target pyblic key (char[] C Type)
-                                  tr.amount.integral,                     # i - 4 byte integer(int C Type)
-                                  tr.amount.fraction,                     # q - 8 byte integer(long long C Type)
-                                  tr.fee.commission,                      # h - 2 byte integer (short C Type)
-                                  tr.currency,                            # b - 1 byte integer (signed char C Type)
-                                  1                                       # b - 1 byte userfield_num
-        )
-
-        target = pack('=6s', bytearray(tr.id.to_bytes(6, 'little')))
-        byte_code = self.client.SmartContractCompile(code)
-        if byte_code.status.code == 0:
-            for bco in byte_code.byteCodeObjects:
-                target = target + bco.byteCode
-        else:
-            print(byte_code.Status.Message)
-            return 'compile error'
-
-        tr.smartContract = SmartContractInvocation()
-        tr.smartContract.smartContractDeploy = SmartContractDeploy()
-        tr.smartContract.smartContractDeploy.sourceCode = code
-
-        tr.smartContract.ForgetNewState = False
-        tr.target = hashlib.blake2s(target).hexdigest()
-
-        uf = bytearray(b'\x11\x00\x01\x00\x00\x00\x00\x015\x00\x02\x12\x00\x00\x00\x00\x15\x00\x03\x11\x00\x00\x00\x00\x02\x00\x04\x00\x12\x00\x05\x11\x00\x01')
-
-        uf = uf + pack('=6s', self.reverse(len(code)))
-        uf = uf + bytearray(code.encode())
-        uf = uf + bytearray(b'\x15\x00\x02\x12')
-        uf = uf + self.reverse(len(byte_code.byteCodeObjects))
-
-        for bco in byte_code.byteCodeObjects:
-            uf = uf + b'1101'
-            uf = uf + self.reverse(len(bco.name))
-            uf = uf + bytearray(bco.name.encode())
-            uf = uf + b'1102'
-            uf = uf + self.reverse(len(bco.byteCode))
-            uf = uf + bco.byteCode
-
-            nbco = ByteCodeObject()
-            nbco.name = bco.name
-            nbco.byteCode = bco.byteCode
-
-            tr.smartContract.smartContractDeploy.byteCodeObjects = [nbco]
-
-            uf = uf + b'\x00'
-
-        uf = uf + b'\x11\x00\x03\x00\x00\x00\x00\x08\x00\x04\x00\x00\x00\x00\x00'
-        uf = uf + b'\x00'
-
-        serial_transaction = serial_transaction + self.reverse(len(uf))
-        serial_transaction = serial_transaction + uf
-
-        signing_key = ed25519.SigningKey(keys.private_key_bytes)
-        sign = signing_key.sign(serial_transaction)
-        tr.signature = sign
-
+        tr.fee.commission = self.double_to_fee(fee)
+        tr.userFields = ""
+        ufNum1 = bytearray(b'\x01')
+        contract.smartContractDeploy.hashState = ""
+        contract.smartContractDeploy.tokenStandard = 0
+        contract.method = ""
+        contract.params = []
+        contract.usedContracts = []
+        contract.forgetNewState = False
+        transportOut = TMemoryBuffer()
+        protocolOut = TBinaryProtocol(transportOut)
+        contract.write(protocolOut)
+        scBytes = transportOut.getvalue()
+        sMap = '=6s32s32slqhb1s4s' + str(len(scBytes)) +'s' #4s' + str(scriptLength) + 's4s' + str(codeNameLength) + 's4s' + str(codeLength) + 's' #len(userField_bytes)
+        serial_transaction_for_sign = pack(sMap,  #'=' - without alignment
+                            lastInnerId,     #6s - 6 byte InnerID (char[] C Type)
+                            tr.source,       #32s - 32 byte source public key (char[] C Type)
+                            tr.target,       #32s - 32 byte target pyblic key (char[] C Type)
+                            tr.amount.integral, #i - 4 byte integer(int C Type)
+                            tr.amount.fraction, #q - 8 byte integer(long long C Type)
+                            tr.fee.commission,  #h - 2 byte integer (short C Type)
+                            tr.currency,        #b - 1 byte integer (signed char C Type)
+                            ufNum1,
+                            bytes(len(scBytes).to_bytes(4, byteorder="little")),
+                            scBytes
+                            )                     
+        signing_key = ed25519.SigningKey(keys.private_key_bytes) # Create object for calulate signing
+        tr.signature = signing_key.sign(serial_transaction_for_sign)
         return tr
 
     def reverse(self, a):
